@@ -3,8 +3,8 @@
 [![Latest Stable Version](https://poser.pugx.org/datalogix/laravel-builder-macros/version)](https://packagist.org/packages/datalogix/laravel-builder-macros)
 [![Total Downloads](https://poser.pugx.org/datalogix/laravel-builder-macros/downloads)](https://packagist.org/packages/datalogix/laravel-builder-macros)
 [![tests](https://github.com/datalogix/laravel-builder-macros/workflows/tests/badge.svg)](https://github.com/datalogix/laravel-builder-macros/actions)
-[![StyleCI](https://github.styleci.io/repos/304879300/shield?style=flat)](https://github.styleci.io/repos/304879300)
-[![codecov](https://codecov.io/gh/datalogix/laravel-builder-macros/branch/master/graph/badge.svg)](https://codecov.io/gh/datalogix/laravel-builder-macros)
+[![StyleCI](https://github.styleci.io/repos/316761194/shield?style=flat)](https://github.styleci.io/repos/316761194)
+[![codecov](https://codecov.io/gh/datalogix/laravel-builder-macros/branch/main/graph/badge.svg)](https://codecov.io/gh/datalogix/laravel-builder-macros)
 [![License](https://poser.pugx.org/datalogix/laravel-builder-macros/license)](https://packagist.org/packages/datalogix/laravel-builder-macros)
 
 > A set of useful Laravel builder macros.
