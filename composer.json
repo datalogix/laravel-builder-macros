@@ -1,0 +1,52 @@
+{
+    "name": "datalogix/laravel-macros",
+    "description": "A set of useful Laravel builder macros.",
+    "keywords": [
+        "laravel",
+        "builder",
+        "macros"
+    ],
+    "homepage": "https://github.com/datalogix/laravel-builder-macros",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Ricardo Gobbo de Souza",
+            "email": "ricardogobbosouza@yahoo.com.br"
+        }
+    ],
+    "require": {
+        "php": "^7.2|^8.0",
+        "illuminate/database": "^7.0|^8.0",
+        "illuminate/support": "^7.0|^8.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^5.0|^6.0",
+        "phpunit/phpunit": "^8.0|^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Datalogix\\BuilderMacros\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Datalogix\\BuilderMacros\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Datalogix\\BuilderMacros\\BuilderMacroServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    }
+}
