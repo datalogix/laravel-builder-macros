@@ -1,5 +1,5 @@
 {
-    "name": "datalogix/laravel-macros",
+    "name": "datalogix/laravel-builder-macros",
     "description": "A set of useful Laravel builder macros.",
     "keywords": [
         "laravel",
