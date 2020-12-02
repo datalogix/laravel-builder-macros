@@ -16,10 +16,10 @@ class MapTest extends TestCase
         $expected = collect([
             'email1@email1.com',
             'email2@email2.com',
-            'email3@email3.com'
+            'email3@email3.com',
         ]);
 
-        $actual = User::query()->map(function($user) {
+        $actual = User::query()->map(function ($user) {
             return $user->email;
         });
 
