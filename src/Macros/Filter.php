@@ -17,7 +17,7 @@ class Filter
     {
         return function ($filters) {
             foreach (Arr::wrap($filters) as $column => $filter) {
-                $this->when($filter, function(Builder $query, $filter) use ($column) {
+                $this->when($filter, function (Builder $query, $filter) use ($column) {
                     return $query->whereLike($column, $filter);
                 });
             }
