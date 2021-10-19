@@ -32,13 +32,21 @@ class WhereLike
                             return $query->orWhereHas(
                                 $relationName,
                                 function (Builder $query) use ($relationColumn, $value) {
-                                    $query->where($relationColumn, 'LIKE', "%{$value}%");
+                                    if (Str::endsWith($relationColumn, '_id')) {
+                                        $query->where($relationColumn, $value);
+                                    } else {
+                                        $query->where($relationColumn, 'LIKE', "%{$value}%");
+                                    }
                                 }
                             );
                         },
 
                         // Default searches
                         function (Builder $query) use ($column, $value) {
+                            if (Str::endsWith($column, '_id')) {
+                                return $query->orWhere($column, $value);
+                            }
+
                             return $query->orWhere($column, 'LIKE', "%{$value}%");
                         }
                     );

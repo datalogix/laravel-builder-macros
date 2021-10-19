@@ -31,6 +31,22 @@ class WhereLikeTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
+    public function testQueryWithColumnKey()
+    {
+        $expected = 'select * from "users" where ("name_id" = ?)';
+        $actual = User::whereLike(['name_id'], 'foo')->toSql();
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function testQueryWithRelationColumnKey()
+    {
+        $expected = 'select * from "users" where (exists (select * from "posts" where "users"."id" = "posts"."user_id" and "author_id" = ?))';
+        $actual = User::whereLike(['posts.author_id'], 'foo')->toSql();
+
+        $this->assertEquals($expected, $actual);
+    }
+
     public function testResult()
     {
         $expected = User::create(['name' => 'name', 'email' => 'foo@bar.com']);
