@@ -23,6 +23,7 @@ The package will automatically register itself.
 
 - [`addSubSelect`](#addSubSelect)
 - [`defaultSelectAll`](#defaultSelectAll)
+- [`filter`](#filter)
 - [`joinRelation`](#joinRelation)
 - [`leftJoinRelation`](#leftJoinRelation)
 - [`map`](#map)
@@ -51,6 +52,28 @@ It selects all columns from the query. Useful for queries with joins and additio
 $query->defaultSelectAll()
     ->join('contacts', 'users.id', '=', 'contacts.user_id')
     ->addSelect('contacts.name as contact_name');
+```
+
+### `filter`
+
+Filter in your models.
+
+```php
+$query->filter(['name' => 'john'])->get();
+
+// Returns all results where name includes `john`
+```
+
+You can also supply an array of columns to filter in:
+```php
+$query->filter(['name' => 'john', 'contact.email' => '@'])->get();
+
+// Returns all results where name includes `john` or contact.email includes `@`
+```
+
+You can use `$request->all()`:
+```php
+$query->filter($request->all())->get();
 ```
 
 ### `joinRelation`
@@ -90,7 +113,7 @@ Search in your models with the `LIKE` operator.
 ```php
 $query->whereLike('title', 'john')->get();
 
-// Returns all results where title  includes `john`
+// Returns all results where title includes `john`
 ```
 
 You can also supply an array of columns to search in:

@@ -34,6 +34,7 @@ class BuilderMacroServiceProvider extends ServiceProvider
         return [
             'addSubSelect' => \Datalogix\BuilderMacros\Macros\AddSubSelect::class,
             'defaultSelectAll' => \Datalogix\BuilderMacros\Macros\DefaultSelectAll::class,
+            'filter' => \Datalogix\BuilderMacros\Macros\Filter::class,
             'joinRelation' => \Datalogix\BuilderMacros\Macros\JoinRelation::class,
             'leftJoinRelation' => \Datalogix\BuilderMacros\Macros\LeftJoinRelation::class,
             'map' => \Datalogix\BuilderMacros\Macros\Map::class,
