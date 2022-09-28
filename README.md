@@ -116,6 +116,18 @@ $query->whereLike('title', 'john')->get();
 // Returns all results where title includes `john`
 ```
 
+```php
+$query->whereLike('title', 'john', false)->get();
+
+// Returns all results where title ends with `john`
+```
+
+```php
+$query->whereLike('title', 'john', true, false)->get();
+
+// Returns all results where title starts with `john`
+```
+
 You can also supply an array of columns to search in:
 ```php
 $query->whereLike(['title', 'contact.name'], 'john')->get();

@@ -7,9 +7,21 @@ use Datalogix\BuilderMacros\Tests\TestCase;
 
 class WhereLikeTest extends TestCase
 {
+    public function testQueryWithBlankValue()
+    {
+        $this->assertEquals('select * from "users"', User::whereLike('name', null)->toSql());
+        $this->assertEquals('select * from "users"', User::whereLike('name', '')->toSql());
+    }
+
+    public function testQueryWithFilledValue()
+    {
+        $this->assertEquals('select * from "users" where ("users"."name" LIKE ?)', User::whereLike('name', false)->toSql());
+        $this->assertEquals('select * from "users" where ("users"."name" LIKE ?)', User::whereLike('name', 0)->toSql());
+    }
+
     public function testQueryWithOneColumn()
     {
-        $expected = 'select * from "users" where ("name" LIKE ?)';
+        $expected = 'select * from "users" where ("users"."name" LIKE ?)';
         $actual = User::whereLike('name', 'foo')->toSql();
 
         $this->assertEquals($expected, $actual);
@@ -17,7 +29,7 @@ class WhereLikeTest extends TestCase
 
     public function testQueryWithMoreColumns()
     {
-        $expected = 'select * from "users" where ("name" LIKE ? or "email" LIKE ?)';
+        $expected = 'select * from "users" where ("users"."name" LIKE ? or "users"."email" LIKE ?)';
         $actual = User::whereLike(['name', 'email'], 'foo')->toSql();
 
         $this->assertEquals($expected, $actual);
@@ -25,7 +37,7 @@ class WhereLikeTest extends TestCase
 
     public function testQueryWithRelation()
     {
-        $expected = 'select * from "users" where ("name" LIKE ? or "email" LIKE ? or exists (select * from "posts" where "users"."id" = "posts"."user_id" and "title" LIKE ?))';
+        $expected = 'select * from "users" where ("users"."name" LIKE ? or "users"."email" LIKE ? or exists (select * from "posts" where "users"."id" = "posts"."user_id" and "title" LIKE ?))';
         $actual = User::whereLike(['name', 'email', 'posts.title'], 'foo')->toSql();
 
         $this->assertEquals($expected, $actual);
@@ -33,7 +45,7 @@ class WhereLikeTest extends TestCase
 
     public function testQueryWithColumnKey()
     {
-        $expected = 'select * from "users" where ("name_id" = ?)';
+        $expected = 'select * from "users" where ("users"."name_id" = ?)';
         $actual = User::whereLike(['name_id'], 'foo')->toSql();
 
         $this->assertEquals($expected, $actual);

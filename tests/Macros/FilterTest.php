@@ -9,7 +9,7 @@ class FilterTest extends TestCase
 {
     public function testQueryWithOneColumn()
     {
-        $expected = 'select * from "users" where ("name" LIKE ?)';
+        $expected = 'select * from "users" where ("users"."name" LIKE ?)';
         $actual = User::filter(['name' => 'foo'])->toSql();
 
         $this->assertEquals($expected, $actual);
@@ -17,7 +17,7 @@ class FilterTest extends TestCase
 
     public function testQueryWithMoreColumns()
     {
-        $expected = 'select * from "users" where ("name" LIKE ?) and ("email" LIKE ?)';
+        $expected = 'select * from "users" where ("users"."name" LIKE ?) and ("users"."email" LIKE ?)';
         $actual = User::filter(['name' => 'foo', 'email' => 'foo'])->toSql();
 
         $this->assertEquals($expected, $actual);
@@ -25,7 +25,7 @@ class FilterTest extends TestCase
 
     public function testQueryWithColumnNullable()
     {
-        $expected = 'select * from "users" where ("name" LIKE ?)';
+        $expected = 'select * from "users" where ("users"."name" LIKE ?)';
         $actual = User::filter(['name' => 'foo', 'email' => null])->toSql();
 
         $this->assertEquals($expected, $actual);
