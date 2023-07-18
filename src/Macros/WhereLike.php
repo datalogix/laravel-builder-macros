@@ -33,7 +33,7 @@ class WhereLike
                             function (Builder $query) use ($column, $value, $start, $end) {
                                 $parts = explode('.', $column);
                                 $relationColumn = array_pop($parts);
-                                $relationName = join('.', $parts);
+                                $relationName = implode('.', $parts);
 
                                 return $query->orWhereHas(
                                     $relationName,

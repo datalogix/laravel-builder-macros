@@ -12,8 +12,6 @@ abstract class TestCase extends AbstractPackageTestCase
 
     /**
      * Setup the test environment.
-     *
-     * @return void
      */
     protected function setUp(): void
     {
@@ -24,10 +22,8 @@ abstract class TestCase extends AbstractPackageTestCase
 
     /**
      * Get the service provider class.
-     *
-     * @return string
      */
-    protected function getServiceProviderClass()
+    protected static function getServiceProviderClass(): string
     {
         return BuilderMacroServiceProvider::class;
     }
