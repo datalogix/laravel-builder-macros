@@ -19,7 +19,7 @@ abstract class TestCase extends AbstractPackageTestCase
     {
         parent::setUp();
 
-        $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
+        $this->loadMigrationsFrom(__DIR__ . '/Database/Migrations');
     }
 
     /**
@@ -27,7 +27,7 @@ abstract class TestCase extends AbstractPackageTestCase
      *
      * @return string
      */
-    protected function getServiceProviderClass()
+    protected static function getServiceProviderClass(): string
     {
         return BuilderMacroServiceProvider::class;
     }
