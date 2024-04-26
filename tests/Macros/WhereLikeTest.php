@@ -43,6 +43,14 @@ class WhereLikeTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
+    public function testQueryWithSubRelation()
+    {
+        $expected = 'select * from "users" where ("users"."name" LIKE ? or "users"."email" LIKE ? or exists (select * from "posts" where "users"."id" = "posts"."user_id" and exists (select * from "comments" where "posts"."id" = "comments"."post_id" and "body" LIKE ?)))';
+        $actual = User::whereLike(['name', 'email', 'posts.comments.body'], 'foo')->toSql();
+
+        $this->assertEquals($expected, $actual);
+    }
+
     public function testQueryWithColumnKey()
     {
         $expected = 'select * from "users" where ("users"."name_id" = ?)';
