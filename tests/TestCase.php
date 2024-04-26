@@ -10,19 +10,11 @@ abstract class TestCase extends AbstractPackageTestCase
 {
     use RefreshDatabase;
 
-    /**
-     * Setup the test environment.
-     */
-    protected function setUp(): void
+    protected function defineDatabaseMigrations(): void
     {
-        parent::setUp();
-
         $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
     }
 
-    /**
-     * Get the service provider class.
-     */
     protected static function getServiceProviderClass(): string
     {
         return BuilderMacroServiceProvider::class;
