@@ -7,7 +7,7 @@ use Datalogix\BuilderMacros\Tests\TestCase;
 
 class AddSubSelectTest extends TestCase
 {
-    public function testQuery()
+    public function test_query()
     {
         $expected = 'select "users".*, (select * from "users" limit 1) as "name" from "users"';
         $actual = User::addSubSelect('name', User::query())->toSql();
