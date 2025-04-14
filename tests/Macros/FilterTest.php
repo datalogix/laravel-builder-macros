@@ -7,7 +7,7 @@ use Datalogix\BuilderMacros\Tests\TestCase;
 
 class FilterTest extends TestCase
 {
-    public function testQueryWithOneColumn()
+    public function test_query_with_one_column()
     {
         $expected = 'select * from "users" where ("users"."name" LIKE ?)';
         $actual = User::filter(['name' => 'foo'])->toSql();
@@ -15,7 +15,7 @@ class FilterTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testQueryWithMoreColumns()
+    public function test_query_with_more_columns()
     {
         $expected = 'select * from "users" where ("users"."name" LIKE ?) and ("users"."email" LIKE ?)';
         $actual = User::filter(['name' => 'foo', 'email' => 'foo'])->toSql();
@@ -23,7 +23,7 @@ class FilterTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function testQueryWithColumnNullable()
+    public function test_query_with_column_nullable()
     {
         $expected = 'select * from "users" where ("users"."name" LIKE ?)';
         $actual = User::filter(['name' => 'foo', 'email' => null])->toSql();

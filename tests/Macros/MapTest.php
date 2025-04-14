@@ -7,7 +7,7 @@ use Datalogix\BuilderMacros\Tests\TestCase;
 
 class MapTest extends TestCase
 {
-    public function testResult()
+    public function test_result()
     {
         User::create(['name' => 'name 1', 'email' => 'email1@email1.com']);
         User::create(['name' => 'name 2', 'email' => 'email2@email2.com']);
