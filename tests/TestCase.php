@@ -10,6 +10,8 @@ abstract class TestCase extends AbstractPackageTestCase
 {
     use RefreshDatabase;
 
+    protected static $latestResponse;
+
     protected function defineDatabaseMigrations(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
