@@ -7,11 +7,11 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 /**
- * @mixin \Illuminate\Database\Eloquent\Builder
+ * @mixin Builder
  *
  * @param  array|string  $columns
  * @param  mixed  $value
- * @return \Illuminate\Database\Eloquent\Builder
+ * @return Builder
  */
 class WhereLike
 {

@@ -2,13 +2,14 @@
 
 namespace Datalogix\BuilderMacros\Macros;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 
 /**
- * @mixin \Illuminate\Database\Eloquent\Builder
+ * @mixin Builder
  *
  * @param  array  $filters
- * @return \Illuminate\Database\Eloquent\Builder
+ * @return Builder
  */
 class Filter
 {

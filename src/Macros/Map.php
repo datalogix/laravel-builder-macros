@@ -2,11 +2,14 @@
 
 namespace Datalogix\BuilderMacros\Macros;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+
 /**
- * @mixin \Illuminate\Database\Eloquent\Builder
+ * @mixin Builder
  *
  * @param  callable  $callback
- * @return \Illuminate\Support\Collection
+ * @return Collection
  */
 class Map
 {

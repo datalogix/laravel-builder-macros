@@ -2,8 +2,10 @@
 
 namespace Datalogix\BuilderMacros\Macros;
 
+use Illuminate\Database\Eloquent\Builder;
+
 /**
- * @mixin \Illuminate\Database\Eloquent\Builder
+ * @mixin Builder
  *
  * @param  string  $column
  * @param  \Illuminate\Database\Query\Builder  $query

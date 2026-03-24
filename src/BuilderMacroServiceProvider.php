@@ -2,6 +2,13 @@
 
 namespace Datalogix\BuilderMacros;
 
+use Datalogix\BuilderMacros\Macros\AddSubSelect;
+use Datalogix\BuilderMacros\Macros\DefaultSelectAll;
+use Datalogix\BuilderMacros\Macros\Filter;
+use Datalogix\BuilderMacros\Macros\JoinRelation;
+use Datalogix\BuilderMacros\Macros\LeftJoinRelation;
+use Datalogix\BuilderMacros\Macros\Map;
+use Datalogix\BuilderMacros\Macros\WhereLike;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
@@ -32,13 +39,13 @@ class BuilderMacroServiceProvider extends ServiceProvider
     private function macros()
     {
         return [
-            'addSubSelect' => \Datalogix\BuilderMacros\Macros\AddSubSelect::class,
-            'defaultSelectAll' => \Datalogix\BuilderMacros\Macros\DefaultSelectAll::class,
-            'filter' => \Datalogix\BuilderMacros\Macros\Filter::class,
-            'joinRelation' => \Datalogix\BuilderMacros\Macros\JoinRelation::class,
-            'leftJoinRelation' => \Datalogix\BuilderMacros\Macros\LeftJoinRelation::class,
-            'map' => \Datalogix\BuilderMacros\Macros\Map::class,
-            'whereLike' => \Datalogix\BuilderMacros\Macros\WhereLike::class,
+            'addSubSelect' => AddSubSelect::class,
+            'defaultSelectAll' => DefaultSelectAll::class,
+            'filter' => Filter::class,
+            'joinRelation' => JoinRelation::class,
+            'leftJoinRelation' => LeftJoinRelation::class,
+            'map' => Map::class,
+            'whereLike' => WhereLike::class,
         ];
     }
 }

@@ -2,10 +2,12 @@
 
 namespace Datalogix\BuilderMacros\Macros;
 
+use Illuminate\Database\Eloquent\Builder;
+
 /**
- * @mixin \Illuminate\Database\Eloquent\Builder
+ * @mixin Builder
  *
- * @return \Illuminate\Database\Eloquent\Builder
+ * @return Builder
  */
 class DefaultSelectAll
 {
