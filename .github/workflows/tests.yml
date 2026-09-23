@@ -1,9 +1,9 @@
 name: tests
 
-on: [push, pull_request]
-
-permissions:
-  contents: read
+on:
+  push:
+    branches: [main]
+  pull_request:
 
 jobs:
   tests:
