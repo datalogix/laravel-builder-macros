@@ -3,7 +3,6 @@
 [![Latest Stable Version](https://poser.pugx.org/datalogix/laravel-builder-macros/version)](https://packagist.org/packages/datalogix/laravel-builder-macros)
 [![Total Downloads](https://poser.pugx.org/datalogix/laravel-builder-macros/downloads)](https://packagist.org/packages/datalogix/laravel-builder-macros)
 [![tests](https://github.com/datalogix/laravel-builder-macros/workflows/tests/badge.svg)](https://github.com/datalogix/laravel-builder-macros/actions)
-[![StyleCI](https://github.styleci.io/repos/316761194/shield?style=flat)](https://github.styleci.io/repos/316761194)
 [![codecov](https://codecov.io/gh/datalogix/laravel-builder-macros/branch/main/graph/badge.svg)](https://codecov.io/gh/datalogix/laravel-builder-macros)
 [![License](https://poser.pugx.org/datalogix/laravel-builder-macros/license)](https://packagist.org/packages/datalogix/laravel-builder-macros)
 
@@ -131,7 +130,7 @@ $userIds = $query->where('user_id', 10)->map(function ($user) {
 Search in your models with the `LIKE` operator.
 
 > [!NOTE]
-> Since Laravel 11.17 the query builder has a native `whereLike($column, $value, $caseSensitive = false)` method. On Eloquent builders this macro takes precedence over it, with a different behavior: the value is wrapped with `%` and the third argument is `$start`, not `$caseSensitive`. On `DB::table()` queries the native method is used.
+> The query builder has a native `whereLike($column, $value, $caseSensitive = false)` method. On Eloquent builders this macro takes precedence over it, with a different behavior: the value is wrapped with `%` and the third argument is `$start`, not `$caseSensitive`. On `DB::table()` queries the native method is used.
 
 ```php
 $query->whereLike('title', 'john')->get();
