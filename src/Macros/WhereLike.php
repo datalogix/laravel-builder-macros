@@ -12,13 +12,16 @@ use Illuminate\Support\Str;
  *
  * @param  array|string  $columns
  * @param  mixed  $value
+ * @param  bool|string  $start
+ * @param  bool|string  $end
+ * @param  bool  $escape
  * @return Builder
  */
 class WhereLike
 {
     public function __invoke()
     {
-        return function ($columns, $value, $start = true, $end = true) {
+        return function ($columns, $value, $start = true, $end = true, $escape = false) {
             $start = $start === true ? '%' : $start;
             $end = $end === true ? '%' : $end;
 
@@ -29,36 +32,59 @@ class WhereLike
 
             $from = Table::reference($this->getQuery()->from);
 
-            $this->where(function (Builder $query) use ($from, $columns, $value, $start, $end) {
+            $like = function (Builder $query, $column, $boolean) use ($value, $start, $end, $escape) {
+                if (! $escape) {
+                    return $query->where($column, 'LIKE', $start.$value.$end, $boolean);
+                }
+
+                // "!" is used as the escape character, as "\" has a different meaning in each database
+                $characters = ['!', '%', '_'];
+
+                if ($query->getQuery()->getConnection()->getDriverName() === 'sqlsrv') {
+                    $characters[] = '[';
+                }
+
+                $value = str_replace($characters, array_map(function ($character) {
+                    return '!'.$character;
+                }, $characters), (string) $value);
+
+                return $query->whereRaw(
+                    $query->getQuery()->getGrammar()->wrap($column)." LIKE ? ESCAPE '!'",
+                    [$start.$value.$end],
+                    $boolean
+                );
+            };
+
+            $this->where(function (Builder $query) use ($from, $columns, $value, $like) {
                 foreach (Arr::wrap($columns) as $column) {
                     $query->when(
                         Str::contains($column, '.'),
 
                         // Relational searches
-                        function (Builder $query) use ($column, $value, $start, $end) {
+                        function (Builder $query) use ($column, $value, $like) {
                             $parts = explode('.', $column);
                             $relationColumn = array_pop($parts);
                             $relationName = implode('.', $parts);
 
                             return $query->orWhereHas(
                                 $relationName,
-                                function (Builder $query) use ($relationColumn, $value, $start, $end) {
+                                function (Builder $query) use ($relationColumn, $value, $like) {
                                     if (Str::endsWith($relationColumn, '_id')) {
                                         $query->where($relationColumn, $value);
                                     } else {
-                                        $query->where($relationColumn, 'LIKE', $start.$value.$end);
+                                        $like($query, $relationColumn, 'and');
                                     }
                                 }
                             );
                         },
 
                         // Default searches
-                        function (Builder $query) use ($from, $column, $value, $start, $end) {
+                        function (Builder $query) use ($from, $column, $value, $like) {
                             if (Str::endsWith($column, '_id')) {
                                 return $query->orWhere(($from ? $from.'.' : '').$column, $value);
                             }
 
-                            return $query->orWhere(($from ? $from.'.' : '').$column, 'LIKE', $start.$value.$end);
+                            return $like($query, ($from ? $from.'.' : '').$column, 'or');
                         }
                     );
                 }

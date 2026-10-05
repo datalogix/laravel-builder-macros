@@ -45,6 +45,7 @@ class BuilderMacroServiceProvider extends ServiceProvider
             'joinRelation' => JoinRelation::class,
             'leftJoinRelation' => LeftJoinRelation::class,
             'map' => Map::class,
+            'search' => WhereLike::class,
             'whereLike' => WhereLike::class,
         ];
     }

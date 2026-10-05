@@ -13,8 +13,18 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function editor()
+    {
+        return $this->belongsTo(User::class, 'editor_id');
+    }
+
     public function comments()
     {
         return $this->hasMany(Comment::class);
+    }
+
+    public function images()
+    {
+        return $this->morphMany(Image::class, 'imageable');
     }
 }

@@ -52,4 +52,12 @@ class FilterTest extends TestCase
         $this->assertEquals('select * from "users"', User::filter('foo')->toSql());
         $this->assertEquals('select * from "users"', User::filter(['foo'])->toSql());
     }
+
+    public function test_query_with_escape()
+    {
+        $query = User::filter(['name' => '10%'], null, true);
+
+        $this->assertEquals('select * from "users" where ("users"."name" LIKE ? ESCAPE \'!\')', $query->toSql());
+        $this->assertEquals(['%10!%%'], $query->getBindings());
+    }
 }

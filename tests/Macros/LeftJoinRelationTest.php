@@ -31,4 +31,20 @@ class LeftJoinRelationTest extends TestCase
 
         $this->assertEquals($expected, $actual);
     }
+
+    public function test_query_with_morph_many()
+    {
+        $expected = 'select "posts".* from "posts" left join "images" on "posts"."id" = "images"."imageable_id" and "images"."imageable_type" = ? and "images"."deleted_at" is null';
+        $actual = Post::leftJoinRelation('images')->toSql();
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function test_query_with_nested_relation()
+    {
+        $expected = 'select "users".* from "users" left join "posts" on "users"."id" = "posts"."user_id" left join "comments" on "posts"."id" = "comments"."post_id"';
+        $actual = User::leftJoinRelation('posts.comments')->toSql();
+
+        $this->assertEquals($expected, $actual);
+    }
 }
