@@ -30,4 +30,26 @@ class FilterTest extends TestCase
 
         $this->assertEquals($expected, $actual);
     }
+
+    public function test_query_with_allowed_columns()
+    {
+        $expected = 'select * from "users" where ("users"."name" LIKE ?)';
+        $actual = User::filter(['name' => 'foo', 'page' => '2', 'password' => 'x'], ['name', 'email'])->toSql();
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function test_query_ignores_array_values()
+    {
+        $expected = 'select * from "users" where ("users"."name" LIKE ?)';
+        $actual = User::filter(['name' => 'foo', 'email' => ['foo']])->toSql();
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function test_query_ignores_numeric_keys()
+    {
+        $this->assertEquals('select * from "users"', User::filter('foo')->toSql());
+        $this->assertEquals('select * from "users"', User::filter(['foo'])->toSql());
+    }
 }

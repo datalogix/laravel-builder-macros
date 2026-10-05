@@ -4,6 +4,7 @@ namespace Datalogix\BuilderMacros\Tests\Macros;
 
 use Datalogix\BuilderMacros\Tests\Database\Models\User;
 use Datalogix\BuilderMacros\Tests\TestCase;
+use Illuminate\Support\Facades\DB;
 
 class WhereLikeTest extends TestCase
 {
@@ -13,10 +14,16 @@ class WhereLikeTest extends TestCase
         $this->assertEquals('select * from "users"', User::whereLike('name', '')->toSql());
     }
 
+    public function test_query_with_boolean_value()
+    {
+        $this->assertEquals('select * from "users"', User::whereLike('name', false)->toSql());
+        $this->assertEquals('select * from "users"', User::whereLike('name', true)->toSql());
+    }
+
     public function test_query_with_filled_value()
     {
-        $this->assertEquals('select * from "users" where ("users"."name" LIKE ?)', User::whereLike('name', false)->toSql());
         $this->assertEquals('select * from "users" where ("users"."name" LIKE ?)', User::whereLike('name', 0)->toSql());
+        $this->assertEquals('select * from "users" where ("users"."name" LIKE ?)', User::whereLike('name', '0')->toSql());
     }
 
     public function test_query_with_one_column()
@@ -82,5 +89,28 @@ class WhereLikeTest extends TestCase
         $actual = User::whereLike('posts.title', 'baz')->first();
 
         $this->assertEquals($expected->id, $actual->id);
+    }
+
+    public function test_query_with_table_alias()
+    {
+        $expected = 'select * from "users" as "u" where ("u"."name" LIKE ?)';
+        $actual = User::from('users as u')->whereLike('name', 'foo')->toSql();
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function test_query_bindings_with_start_and_end()
+    {
+        $this->assertEquals(['%foo%'], User::whereLike('name', 'foo')->getBindings());
+        $this->assertEquals(['foo%'], User::whereLike('name', 'foo', false)->getBindings());
+        $this->assertEquals(['%foo'], User::whereLike('name', 'foo', true, false)->getBindings());
+    }
+
+    public function test_query_with_expression_table()
+    {
+        $expected = 'select * from users where ("name" LIKE ?)';
+        $actual = User::from(DB::raw('users'))->whereLike('name', 'foo')->toSql();
+
+        $this->assertEquals($expected, $actual);
     }
 }

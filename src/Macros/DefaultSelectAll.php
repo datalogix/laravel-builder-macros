@@ -2,6 +2,7 @@
 
 namespace Datalogix\BuilderMacros\Macros;
 
+use Datalogix\BuilderMacros\Support\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -14,8 +15,10 @@ class DefaultSelectAll
     public function __invoke()
     {
         return function () {
-            if (is_null($this->getQuery()->columns)) {
-                $this->select($this->getQuery()->from.'.*');
+            $from = Table::reference($this->getQuery()->from);
+
+            if (is_null($this->getQuery()->columns) && $from) {
+                $this->select($from.'.*');
             }
 
             return $this;

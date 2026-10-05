@@ -9,21 +9,14 @@ use Illuminate\Database\Eloquent\Builder;
  *
  * @param  string  $relationName
  * @param  string  $operator
- * @return mixed
+ * @return Builder
  */
-class LeftJoinRelation
+class LeftJoinRelation extends JoinRelation
 {
-    public function __invoke()
-    {
-        return function ($relationName, $operator = '=') {
-            $relation = $this->getRelation($relationName);
-
-            return $this->leftJoin(
-                $relation->getRelated()->getTable(),
-                $relation->getQualifiedForeignKeyName(),
-                $operator,
-                $relation->getQualifiedOwnerKeyName()
-            );
-        };
-    }
+    /**
+     * The type of join.
+     *
+     * @var string
+     */
+    protected $type = 'left';
 }
