@@ -27,7 +27,7 @@ class BuilderMacroServiceProvider extends ServiceProvider
                 return Builder::hasGlobalMacro($macro);
             })
             ->each(function ($class, $macro) {
-                Builder::macro($macro, app($class)());
+                Builder::macro($macro, $this->app->make($class)());
             });
     }
 

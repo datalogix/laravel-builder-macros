@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
  * @mixin Builder
  *
  * @param  string  $column
- * @param  \Illuminate\Database\Query\Builder  $query
- * @return \Illuminate\Database\Query\Builder
+ * @param  Builder|\Illuminate\Database\Query\Builder  $query
+ * @return Builder
  */
 class AddSubSelect
 {
@@ -18,7 +18,7 @@ class AddSubSelect
         return function ($column, $query) {
             $this->defaultSelectAll();
 
-            return $this->selectSub($query->limit(1)->getQuery(), $column);
+            return $this->selectSub((clone $query)->limit(1), $column);
         };
     }
 }

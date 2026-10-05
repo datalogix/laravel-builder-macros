@@ -2,6 +2,7 @@
 
 namespace Datalogix\BuilderMacros\Macros;
 
+use Datalogix\BuilderMacros\Support\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -21,43 +22,46 @@ class WhereLike
             $start = $start === true ? '%' : $start;
             $end = $end === true ? '%' : $end;
 
-            $this->when(filled($value), function (Builder $query) use ($columns, $value, $start, $end) {
-                return $query->where(function (Builder $query) use ($columns, $value, $start, $end) {
-                    $from = $query->getQuery()->from;
+            // Booleans would be cast to "" or "1" and match almost every row
+            if (is_bool($value) || blank($value)) {
+                return $this;
+            }
 
-                    foreach (Arr::wrap($columns) as $column) {
-                        $query->when(
-                            Str::contains($column, '.'),
+            $from = Table::reference($this->getQuery()->from);
 
-                            // Relational searches
-                            function (Builder $query) use ($column, $value, $start, $end) {
-                                $parts = explode('.', $column);
-                                $relationColumn = array_pop($parts);
-                                $relationName = implode('.', $parts);
+            $this->where(function (Builder $query) use ($from, $columns, $value, $start, $end) {
+                foreach (Arr::wrap($columns) as $column) {
+                    $query->when(
+                        Str::contains($column, '.'),
 
-                                return $query->orWhereHas(
-                                    $relationName,
-                                    function (Builder $query) use ($relationColumn, $value, $start, $end) {
-                                        if (Str::endsWith($relationColumn, '_id')) {
-                                            $query->where($relationColumn, $value);
-                                        } else {
-                                            $query->where($relationColumn, 'LIKE', $start.$value.$end);
-                                        }
+                        // Relational searches
+                        function (Builder $query) use ($column, $value, $start, $end) {
+                            $parts = explode('.', $column);
+                            $relationColumn = array_pop($parts);
+                            $relationName = implode('.', $parts);
+
+                            return $query->orWhereHas(
+                                $relationName,
+                                function (Builder $query) use ($relationColumn, $value, $start, $end) {
+                                    if (Str::endsWith($relationColumn, '_id')) {
+                                        $query->where($relationColumn, $value);
+                                    } else {
+                                        $query->where($relationColumn, 'LIKE', $start.$value.$end);
                                     }
-                                );
-                            },
-
-                            // Default searches
-                            function (Builder $query) use ($from, $column, $value, $start, $end) {
-                                if (Str::endsWith($column, '_id')) {
-                                    return $query->orWhere(($from ? $from.'.' : '').$column, $value);
                                 }
+                            );
+                        },
 
-                                return $query->orWhere(($from ? $from.'.' : '').$column, 'LIKE', $start.$value.$end);
+                        // Default searches
+                        function (Builder $query) use ($from, $column, $value, $start, $end) {
+                            if (Str::endsWith($column, '_id')) {
+                                return $query->orWhere(($from ? $from.'.' : '').$column, $value);
                             }
-                        );
-                    }
-                });
+
+                            return $query->orWhere(($from ? $from.'.' : '').$column, 'LIKE', $start.$value.$end);
+                        }
+                    );
+                }
             });
 
             return $this;

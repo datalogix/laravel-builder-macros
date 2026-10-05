@@ -4,6 +4,7 @@ namespace Datalogix\BuilderMacros\Tests\Macros;
 
 use Datalogix\BuilderMacros\Tests\Database\Models\User;
 use Datalogix\BuilderMacros\Tests\TestCase;
+use Illuminate\Support\Facades\DB;
 
 class DefaultSelectAllTest extends TestCase
 {
@@ -27,6 +28,22 @@ class DefaultSelectAllTest extends TestCase
     {
         $expected = 'select "email", "name" from "users"';
         $actual = User::select('email', 'name')->defaultSelectAll()->toSql();
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function test_query_with_table_alias()
+    {
+        $expected = 'select "u".* from "users" as "u"';
+        $actual = User::from('users as u')->defaultSelectAll()->toSql();
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function test_query_with_expression_table()
+    {
+        $expected = 'select * from users';
+        $actual = User::from(DB::raw('users'))->defaultSelectAll()->toSql();
 
         $this->assertEquals($expected, $actual);
     }
