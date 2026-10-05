@@ -2,6 +2,7 @@
 
 namespace Datalogix\BuilderMacros\Tests\Macros;
 
+use Datalogix\BuilderMacros\Tests\Database\Models\Post;
 use Datalogix\BuilderMacros\Tests\Database\Models\User;
 use Datalogix\BuilderMacros\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
@@ -112,5 +113,45 @@ class WhereLikeTest extends TestCase
         $actual = User::from(DB::raw('users'))->whereLike('name', 'foo')->toSql();
 
         $this->assertEquals($expected, $actual);
+    }
+
+    public function test_query_with_escape()
+    {
+        $expected = 'select * from "users" where ("users"."name" LIKE ? ESCAPE \'!\' or exists (select * from "posts" where "users"."id" = "posts"."user_id" and "title" LIKE ? ESCAPE \'!\'))';
+        $query = User::whereLike(['name', 'posts.title'], '10%_!', true, true, true);
+
+        $this->assertEquals($expected, $query->toSql());
+        $this->assertEquals(['%10!%!_!!%', '%10!%!_!!%'], $query->getBindings());
+    }
+
+    public function test_query_with_escape_named_argument()
+    {
+        $this->assertEquals(['10!%%'], User::whereLike('name', '10%', start: false, escape: true)->getBindings());
+    }
+
+    public function test_result_with_escape()
+    {
+        $user = User::create(['name' => 'foo', 'email' => 'foo@bar.com']);
+        $user->posts()->create(['title' => '100% off']);
+        $user->posts()->create(['title' => '1000 off']);
+        $user->posts()->create(['title' => 'a_b']);
+        $user->posts()->create(['title' => 'axb']);
+        $user->posts()->create(['title' => 'wow!']);
+
+        $this->assertEquals(['100% off'], Post::whereLike('title', '100%', true, true, true)->pluck('title')->all());
+        $this->assertEquals(['a_b'], Post::whereLike('title', 'a_b', true, true, true)->pluck('title')->all());
+        $this->assertEquals(['wow!'], Post::whereLike('title', '!', true, true, true)->pluck('title')->all());
+        $this->assertCount(2, Post::whereLike('title', '100%')->get());
+    }
+
+    public function test_query_with_escape_on_sql_server()
+    {
+        // The query is only compiled, so no connection is made
+        config(['database.connections.sqlsrv_test' => ['driver' => 'sqlsrv', 'database' => 'test']]);
+
+        $query = User::on('sqlsrv_test')->whereLike('name', '[a]%', true, true, true);
+
+        $this->assertEquals('select * from [users] where ([users].[name] LIKE ? ESCAPE \'!\')', $query->toSql());
+        $this->assertEquals(['%![a]!%%'], $query->getBindings());
     }
 }

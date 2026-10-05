@@ -23,6 +23,11 @@ class User extends Model
         return $this->hasMany(Post::class);
     }
 
+    public function avatar()
+    {
+        return $this->morphOne(Image::class, 'imageable');
+    }
+
     public function latestComment()
     {
         return $this->hasOneThrough(Comment::class, Post::class);
