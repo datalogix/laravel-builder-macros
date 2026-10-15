@@ -3,22 +3,20 @@
 namespace Datalogix\BuilderMacros\Tests;
 
 use Datalogix\BuilderMacros\BuilderMacroServiceProvider;
-use GrahamCampbell\TestBench\AbstractPackageTestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Orchestra\Testbench\TestCase as Orchestra;
 
-abstract class TestCase extends AbstractPackageTestCase
+abstract class TestCase extends Orchestra
 {
     use RefreshDatabase;
-
-    protected static $latestResponse;
 
     protected function defineDatabaseMigrations(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
     }
 
-    protected static function getServiceProviderClass(): string
+    protected function getPackageProviders($app): array
     {
-        return BuilderMacroServiceProvider::class;
+        return [BuilderMacroServiceProvider::class];
     }
 }
