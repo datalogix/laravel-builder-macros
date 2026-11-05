@@ -15,13 +15,14 @@ use Illuminate\Support\Str;
  * @param  bool|string  $start
  * @param  bool|string  $end
  * @param  bool  $escape
+ * @param  bool  $ignoreCase
  * @return Builder
  */
 class WhereLike
 {
     public function __invoke()
     {
-        return function ($columns, $value, $start = true, $end = true, $escape = false) {
+        return function ($columns, $value, $start = true, $end = true, $escape = false, $ignoreCase = false) {
             $start = $start === true ? '%' : $start;
             $end = $end === true ? '%' : $end;
 
@@ -32,15 +33,20 @@ class WhereLike
 
             $from = Table::reference($this->getQuery()->from);
 
-            $like = function (Builder $query, $column, $boolean) use ($value, $start, $end, $escape) {
+            $like = function (Builder $query, $column, $boolean) use ($value, $start, $end, $escape, $ignoreCase) {
+                $driver = $query->getQuery()->getConnection()->getDriverName();
+
+                // PostgreSQL's LIKE is case sensitive; the other databases ignore case with their default collations
+                $operator = $ignoreCase && $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
+
                 if (! $escape) {
-                    return $query->where($column, 'LIKE', $start.$value.$end, $boolean);
+                    return $query->where($column, $operator, $start.$value.$end, $boolean);
                 }
 
                 // "!" is used as the escape character, as "\" has a different meaning in each database
                 $characters = ['!', '%', '_'];
 
-                if ($query->getQuery()->getConnection()->getDriverName() === 'sqlsrv') {
+                if ($driver === 'sqlsrv') {
                     $characters[] = '[';
                 }
 
@@ -49,7 +55,7 @@ class WhereLike
                 }, $characters), (string) $value);
 
                 return $query->whereRaw(
-                    $query->getQuery()->getGrammar()->wrap($column)." LIKE ? ESCAPE '!'",
+                    $query->getQuery()->getGrammar()->wrap($column)." {$operator} ? ESCAPE '!'",
                     [$start.$value.$end],
                     $boolean
                 );

@@ -154,4 +154,48 @@ class WhereLikeTest extends TestCase
         $this->assertEquals('select * from [users] where ([users].[name] LIKE ? ESCAPE \'!\')', $query->toSql());
         $this->assertEquals(['%![a]!%%'], $query->getBindings());
     }
+
+    public function test_query_with_ignore_case_on_postgres()
+    {
+        // The query is only compiled, so no connection is made
+        config(['database.connections.pgsql_test' => ['driver' => 'pgsql', 'database' => 'test']]);
+
+        $this->assertEquals(
+            'select * from "users" where ("users"."name"::text ILIKE ? or exists (select * from "posts" where "users"."id" = "posts"."user_id" and "title"::text ILIKE ?))',
+            User::on('pgsql_test')->whereLike(['name', 'posts.title'], 'foo', ignoreCase: true)->toSql()
+        );
+        $this->assertEquals(
+            'select * from "users" where ("users"."name" ILIKE ? ESCAPE \'!\')',
+            User::on('pgsql_test')->whereLike('name', '10%', true, true, true, true)->toSql()
+        );
+    }
+
+    public function test_query_without_ignore_case_on_postgres()
+    {
+        config(['database.connections.pgsql_test' => ['driver' => 'pgsql', 'database' => 'test']]);
+
+        $this->assertEquals(
+            'select * from "users" where ("users"."name"::text LIKE ?)',
+            User::on('pgsql_test')->whereLike('name', 'foo')->toSql()
+        );
+    }
+
+    public function test_query_with_ignore_case_on_other_databases()
+    {
+        config(['database.connections.sqlsrv_test' => ['driver' => 'sqlsrv', 'database' => 'test']]);
+
+        $this->assertEquals('select * from "users" where ("users"."name" LIKE ?)', User::whereLike('name', 'foo', ignoreCase: true)->toSql());
+        $this->assertEquals(
+            'select * from [users] where ([users].[name] LIKE ? ESCAPE \'!\')',
+            User::on('sqlsrv_test')->whereLike('name', 'foo', escape: true, ignoreCase: true)->toSql()
+        );
+    }
+
+    public function test_result_with_ignore_case()
+    {
+        User::create(['name' => 'Foo', 'email' => 'foo@bar.com']);
+
+        $this->assertEquals(['Foo'], User::whereLike('name', 'foo', ignoreCase: true)->pluck('name')->all());
+        $this->assertEquals(['Foo'], User::whereLike('name', 'foo', escape: true, ignoreCase: true)->pluck('name')->all());
+    }
 }
