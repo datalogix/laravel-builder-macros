@@ -6,7 +6,10 @@
 *.md diff=markdown
 *.php diff=php
 
+/.ai export-ignore
+/.claude export-ignore
 /.editorconfig export-ignore
+/.git-blame-ignore-revs export-ignore
 /.gitattributes export-ignore
 /.github export-ignore
 /.gitignore export-ignore
@@ -16,7 +19,12 @@
 /RELEASE.md export-ignore
 /UPGRADE.md export-ignore
 /composer.lock export-ignore
+/docs export-ignore
 /package-lock.json export-ignore
 /package.json export-ignore
+/phpunit.xml export-ignore
 /phpunit.xml.dist export-ignore
+/pint.json export-ignore
+/testbench.yaml export-ignore
 /tests export-ignore
+/workbench export-ignore
