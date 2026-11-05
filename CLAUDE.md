@@ -28,7 +28,7 @@ CI runs the shared workflow `datalogix/workflows/.github/workflows/laravel-tests
 - `Support\Table::reference()` resolves the name used to reference a table (`users as u` → `u`, non-string `from` → `null`). Use it whenever building qualified column names from `$query->from` or join tables.
 
 Key behaviors that tests cover and are easy to break:
-- `whereLike`: columns with `.` become `orWhereHas` on the relation path; columns ending in `_id` use `=`; blank and boolean values are no-ops; `$escape` uses `LIKE ? ESCAPE '!'` (plus `[` on `sqlsrv`) so it is portable across drivers.
+- `whereLike`: columns with `.` become `orWhereHas` on the relation path; columns ending in `_id` use `=`; blank and boolean values are no-ops; `$escape` uses `LIKE ? ESCAPE '!'` (plus `[` on `sqlsrv`) so it is portable across drivers; `$ignoreCase` switches to `ILIKE` on `pgsql` only (other drivers already ignore case through their default collations).
 - `joinRelation`: supports BelongsTo (not MorphTo), HasOne/HasMany and MorphOne/MorphMany, with nested paths (`posts.comments`). It adds the morph type and `SoftDeletes` constraints to the join, and aliases the table as the relation name when it is the main table or already joined.
 
 ## Tests

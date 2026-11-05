@@ -200,7 +200,7 @@ Notes:
 - `%` and `_` in the value act as wildcards, unless escaped with the `$escape` argument:
 
 ```php
-// Params: $columns, $value, $start, $end, $escape
+// Params: $columns, $value, $start, $end, $escape, $ignoreCase
 $query->whereLike('title', '100%', true, true, true)->get();
 
 // Or
@@ -210,3 +210,11 @@ $query->whereLike('title', '100%', escape: true)->get();
 ```
 
 Escaping uses `LIKE ? ESCAPE '!'`, so it works the same way in MySQL, PostgreSQL, SQLite and SQL Server.
+
+- Case sensitivity follows the database: PostgreSQL's `LIKE` is case sensitive, while MySQL, SQLite and SQL Server ignore case with their default collations. Pass the `$ignoreCase` argument to ignore case on PostgreSQL too (it uses `ILIKE` there; the other databases are unchanged):
+
+```php
+$query->whereLike('title', 'john', ignoreCase: true)->get();
+
+// Returns all results where title includes `john`, `John` or `JOHN`, on every database
+```
