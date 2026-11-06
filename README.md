@@ -2,11 +2,16 @@
 
 [![Latest Stable Version](https://poser.pugx.org/datalogix/laravel-builder-macros/version)](https://packagist.org/packages/datalogix/laravel-builder-macros)
 [![Total Downloads](https://poser.pugx.org/datalogix/laravel-builder-macros/downloads)](https://packagist.org/packages/datalogix/laravel-builder-macros)
-[![tests](https://github.com/datalogix/laravel-builder-macros/workflows/tests/badge.svg)](https://github.com/datalogix/laravel-builder-macros/actions)
+[![tests](https://github.com/datalogix/laravel-builder-macros/actions/workflows/tests.yml/badge.svg)](https://github.com/datalogix/laravel-builder-macros/actions)
 [![codecov](https://codecov.io/gh/datalogix/laravel-builder-macros/branch/main/graph/badge.svg)](https://codecov.io/gh/datalogix/laravel-builder-macros)
 [![License](https://poser.pugx.org/datalogix/laravel-builder-macros/license)](https://packagist.org/packages/datalogix/laravel-builder-macros)
 
 > A set of useful Laravel builder macros.
+
+## Requirements
+
+- PHP 8.2+
+- Laravel 12 or 13
 
 ## Installation
 
@@ -45,6 +50,8 @@ $query->addSubSelect('primary_address_id',
 
 // It adds primary_address_id to the result set
 ```
+
+When no columns are selected, it also selects all columns of the main table (see [`defaultSelectAll`](#defaultSelectAll)), so the sub query is added to them instead of replacing them. The sub query is limited to one row.
 
 ### `defaultSelectAll`
 
@@ -143,8 +150,8 @@ It works like [`joinRelation`](#joinRelation), with a `LEFT JOIN`.
 A direct method to retrieve the results and map it.
 
 ```php
-$userIds = $query->where('user_id', 10)->map(function ($user) {
-    return $user->id;
+$emails = User::where('active', true)->map(function ($user) {
+    return $user->email;
 });
 
 // Returns a collection
