@@ -27,4 +27,9 @@ class Post extends Model
     {
         return $this->morphMany(Image::class, 'imageable');
     }
+
+    public function save(array $options = [])
+    {
+        return parent::save($options);
+    }
 }

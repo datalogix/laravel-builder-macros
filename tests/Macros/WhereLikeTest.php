@@ -2,10 +2,13 @@
 
 namespace Datalogix\BuilderMacros\Tests\Macros;
 
+use Datalogix\BuilderMacros\Tests\Database\Models\Image;
 use Datalogix\BuilderMacros\Tests\Database\Models\Post;
 use Datalogix\BuilderMacros\Tests\Database\Models\User;
 use Datalogix\BuilderMacros\Tests\TestCase;
+use Illuminate\Database\Eloquent\RelationNotFoundException;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class WhereLikeTest extends TestCase
 {
@@ -153,5 +156,143 @@ class WhereLikeTest extends TestCase
 
         $this->assertEquals('select * from [users] where ([users].[name] LIKE ? ESCAPE \'!\')', $query->toSql());
         $this->assertEquals(['%![a]!%%'], $query->getBindings());
+    }
+
+    public function test_query_with_ignore_case_on_postgres()
+    {
+        // The query is only compiled, so no connection is made
+        config(['database.connections.pgsql_test' => ['driver' => 'pgsql', 'database' => 'test']]);
+
+        $this->assertEquals(
+            'select * from "users" where ("users"."name"::text ILIKE ? or exists (select * from "posts" where "users"."id" = "posts"."user_id" and "title"::text ILIKE ?))',
+            User::on('pgsql_test')->whereLike(['name', 'posts.title'], 'foo', ignoreCase: true)->toSql()
+        );
+        $this->assertEquals(
+            'select * from "users" where ("users"."name" ILIKE ? ESCAPE \'!\')',
+            User::on('pgsql_test')->whereLike('name', '10%', true, true, true, true)->toSql()
+        );
+    }
+
+    public function test_query_without_ignore_case_on_postgres()
+    {
+        config(['database.connections.pgsql_test' => ['driver' => 'pgsql', 'database' => 'test']]);
+
+        $this->assertEquals(
+            'select * from "users" where ("users"."name"::text LIKE ?)',
+            User::on('pgsql_test')->whereLike('name', 'foo')->toSql()
+        );
+    }
+
+    public function test_query_with_ignore_case_on_other_databases()
+    {
+        config(['database.connections.sqlsrv_test' => ['driver' => 'sqlsrv', 'database' => 'test']]);
+
+        $this->assertEquals('select * from "users" where ("users"."name" LIKE ?)', User::whereLike('name', 'foo', ignoreCase: true)->toSql());
+        $this->assertEquals(
+            'select * from [users] where ([users].[name] LIKE ? ESCAPE \'!\')',
+            User::on('sqlsrv_test')->whereLike('name', 'foo', escape: true, ignoreCase: true)->toSql()
+        );
+    }
+
+    public function test_result_with_ignore_case()
+    {
+        User::create(['name' => 'Foo', 'email' => 'foo@bar.com']);
+
+        $this->assertEquals(['Foo'], User::whereLike('name', 'foo', ignoreCase: true)->pluck('name')->all());
+        $this->assertEquals(['Foo'], User::whereLike('name', 'foo', escape: true, ignoreCase: true)->pluck('name')->all());
+    }
+
+    public function test_query_with_model_method_as_relation_does_not_call_it()
+    {
+        User::create(['name' => 'Foo', 'email' => 'foo@bar.com']);
+
+        foreach (['truncate', 'save', 'delete', 'touch', 'hasOne', 'query', 'getTable'] as $method) {
+            try {
+                User::whereLike($method.'.name', 'foo')->get();
+                $this->fail("Relation [{$method}] should not be accepted.");
+            } catch (RelationNotFoundException $e) {
+                $this->assertEquals($method, $e->relation);
+            }
+        }
+
+        $this->assertEquals(1, User::count());
+    }
+
+    public function test_query_with_model_method_as_sub_relation_does_not_call_it()
+    {
+        $this->expectException(RelationNotFoundException::class);
+
+        try {
+            Post::whereLike('images.restore.url', 'foo')->get();
+        } finally {
+            $this->assertEquals(0, Image::withTrashed()->count());
+        }
+    }
+
+    public function test_query_with_relation_requiring_arguments()
+    {
+        $this->expectException(RelationNotFoundException::class);
+
+        User::whereLike('postsWithTitle.title', 'foo')->toSql();
+    }
+
+    public function test_query_with_model_method_not_returning_relation()
+    {
+        $this->expectException(RelationNotFoundException::class);
+
+        User::whereLike('initials.x', 'foo')->toSql();
+    }
+
+    public function test_query_with_laravel_trait_method_as_relation_does_not_call_it()
+    {
+        foreach (['markEmailAsVerified', 'sendEmailVerificationNotification'] as $method) {
+            try {
+                User::whereLike($method.'.name', 'foo')->get();
+                $this->fail("Relation [{$method}] should not be accepted.");
+            } catch (RelationNotFoundException $e) {
+                $this->assertEquals($method, $e->relation);
+            }
+        }
+
+        $this->assertEquals(0, User::count());
+    }
+
+    public function test_query_with_overridden_model_method_as_relation_does_not_call_it()
+    {
+        foreach (['save', 'SAVE'] as $method) {
+            try {
+                Post::whereLike($method.'.title', 'foo')->get();
+                $this->fail("Relation [{$method}] should not be accepted.");
+            } catch (RelationNotFoundException $e) {
+                $this->assertEquals($method, $e->relation);
+            }
+        }
+
+        $this->assertEquals(0, Post::count());
+    }
+
+    public function test_query_with_relation_after_morph_to()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Relation [imageable] is a MorphTo relation');
+
+        Post::whereLike('images.imageable.user.name', 'foo')->toSql();
+    }
+
+    public function test_query_with_morph_to_as_last_relation()
+    {
+        $this->assertStringContainsString('"images"', Image::whereLike('imageable.name', 'foo')->toSql());
+    }
+
+    public function test_query_with_dynamic_relation()
+    {
+        User::resolveRelationUsing('articles', function (User $user) {
+            return $user->hasMany(Post::class);
+        });
+
+        $expected = 'select * from "users" where (exists (select * from "posts" where "users"."id" = "posts"."user_id" and "title" LIKE ?))';
+        $actual = User::whereLike('articles.title', 'foo')->toSql();
+
+        $this->assertEquals($expected, $actual);
     }
 }

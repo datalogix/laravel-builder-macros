@@ -4,6 +4,7 @@ namespace Datalogix\BuilderMacros\Tests\Macros;
 
 use Datalogix\BuilderMacros\Tests\Database\Models\User;
 use Datalogix\BuilderMacros\Tests\TestCase;
+use Illuminate\Database\Eloquent\RelationNotFoundException;
 
 class FilterTest extends TestCase
 {
@@ -59,5 +60,19 @@ class FilterTest extends TestCase
 
         $this->assertEquals('select * from "users" where ("users"."name" LIKE ? ESCAPE \'!\')', $query->toSql());
         $this->assertEquals(['%10!%%'], $query->getBindings());
+    }
+
+    public function test_query_with_model_method_key_does_not_call_it()
+    {
+        User::create(['name' => 'Foo', 'email' => 'foo@bar.com']);
+
+        try {
+            User::filter(['truncate.name' => 'foo'])->get();
+            $this->fail('Relation [truncate] should not be accepted.');
+        } catch (RelationNotFoundException $e) {
+            $this->assertEquals('truncate', $e->relation);
+        }
+
+        $this->assertEquals(1, User::count());
     }
 }

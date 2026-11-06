@@ -2,10 +2,13 @@
 
 namespace Datalogix\BuilderMacros\Tests\Database\Models;
 
+use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Model;
 
 class User extends Model
 {
+    use MustVerifyEmail;
+
     protected $guarded = [];
 
     public function parent()
@@ -31,5 +34,15 @@ class User extends Model
     public function latestComment()
     {
         return $this->hasOneThrough(Comment::class, Post::class);
+    }
+
+    public function postsWithTitle($title)
+    {
+        return $this->posts()->where('title', $title);
+    }
+
+    public function initials()
+    {
+        return strtoupper(substr((string) $this->name, 0, 1));
     }
 }

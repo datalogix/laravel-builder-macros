@@ -2,11 +2,16 @@
 
 [![Latest Stable Version](https://poser.pugx.org/datalogix/laravel-builder-macros/version)](https://packagist.org/packages/datalogix/laravel-builder-macros)
 [![Total Downloads](https://poser.pugx.org/datalogix/laravel-builder-macros/downloads)](https://packagist.org/packages/datalogix/laravel-builder-macros)
-[![tests](https://github.com/datalogix/laravel-builder-macros/workflows/tests/badge.svg)](https://github.com/datalogix/laravel-builder-macros/actions)
+[![ci](https://img.shields.io/github/actions/workflow/status/datalogix/laravel-builder-macros/datalogix.yml?branch=main&label=ci)](https://github.com/datalogix/laravel-builder-macros/actions/workflows/datalogix.yml)
 [![codecov](https://codecov.io/gh/datalogix/laravel-builder-macros/branch/main/graph/badge.svg)](https://codecov.io/gh/datalogix/laravel-builder-macros)
 [![License](https://poser.pugx.org/datalogix/laravel-builder-macros/license)](https://packagist.org/packages/datalogix/laravel-builder-macros)
 
 > A set of useful Laravel builder macros.
+
+## Requirements
+
+- PHP 8.2+
+- Laravel 12 or 13
 
 ## Installation
 
@@ -17,6 +22,10 @@ composer require datalogix/laravel-builder-macros
 ```
 
 The package will automatically register itself.
+
+The package ships AI guidelines for [Laravel Boost](https://laravel.com/docs/boost), which are loaded when you run `php artisan boost:install`.
+
+If a macro with the same name is already registered, for example by another package, it is kept. To replace one of these macros in your application, register your own with `Builder::macro()` in the `boot` method of a service provider.
 
 ## Macros
 
@@ -43,6 +52,8 @@ $query->addSubSelect('primary_address_id',
 
 // It adds primary_address_id to the result set
 ```
+
+When no columns are selected, it also selects all columns of the main table (see [`defaultSelectAll`](#defaultSelectAll)), so the sub query is added to them instead of replacing them. The sub query is limited to one row.
 
 ### `defaultSelectAll`
 
@@ -88,7 +99,7 @@ $query->filter($request->all(), ['name', 'email'], true)->get();
 ```
 
 > [!WARNING]
-> Never pass unfiltered input such as `$request->all()` without allowed columns: every key becomes a column (or a relation, when it contains a `.`), so users could filter on any column, like `password`, or break the query with keys like `page`.
+> Never pass unfiltered input such as `$request->all()` without allowed columns: every key becomes a column (or a relation, when it contains a `.`), so users could filter on any column, like `password`, or break the query with keys like `page`. Laravel resolves a relation by calling the model method of the same name, so a key like `archive.x` would run a public `archive()` method of your model. Laravel's own methods, like `truncate`, `save` or `markEmailAsVerified`, are rejected even when your model overrides them, but methods of your model and of other packages' traits, like Scout's `searchable`, are not.
 
 ### `joinRelation`
 
@@ -141,8 +152,8 @@ It works like [`joinRelation`](#joinRelation), with a `LEFT JOIN`.
 A direct method to retrieve the results and map it.
 
 ```php
-$userIds = $query->where('user_id', 10)->map(function ($user) {
-    return $user->id;
+$emails = User::where('active', true)->map(function ($user) {
+    return $user->email;
 });
 
 // Returns a collection
@@ -195,12 +206,13 @@ $query->whereLike(['title', 'contact.name'], 'john')->get();
 Notes:
 
 - Columns containing a `.` are searched in relations (`contact.name` searches `name` in the `contact` relation, and `posts.comments.body` searches nested relations). Table-prefixed columns like `users.name` are not supported. Relation searches don't support aliased tables (`from('users as u')`), as Laravel's `whereHas` doesn't.
+- Each name of a relation path must be a relation of the model. Names of Laravel's own methods (like `truncate`, `save` or `markEmailAsVerified`, even when overridden by the model), static, non-public and methods with required arguments throw a `RelationNotFoundException` before any method is called; other public methods are called to check that they return a relation and throw it if they don't. A `MorphTo` relation can only be the last name of the path, as its related model is only known per row; followed by other names, it throws an `InvalidArgumentException`.
 - Columns ending in `_id` are compared with `=` instead of `LIKE`.
 - Blank and boolean values are ignored.
 - `%` and `_` in the value act as wildcards, unless escaped with the `$escape` argument:
 
 ```php
-// Params: $columns, $value, $start, $end, $escape
+// Params: $columns, $value, $start, $end, $escape, $ignoreCase
 $query->whereLike('title', '100%', true, true, true)->get();
 
 // Or
@@ -210,3 +222,11 @@ $query->whereLike('title', '100%', escape: true)->get();
 ```
 
 Escaping uses `LIKE ? ESCAPE '!'`, so it works the same way in MySQL, PostgreSQL, SQLite and SQL Server.
+
+- Case sensitivity follows the database: PostgreSQL's `LIKE` is case sensitive, while MySQL, SQLite and SQL Server ignore case with their default collations. Pass the `$ignoreCase` argument to ignore case on PostgreSQL too (it uses `ILIKE` there; the other databases are unchanged):
+
+```php
+$query->whereLike('title', 'john', ignoreCase: true)->get();
+
+// Returns all results where title includes `john`, `John` or `JOHN`, on PostgreSQL and on databases with case-insensitive collations
+```
