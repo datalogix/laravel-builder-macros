@@ -18,6 +18,8 @@ composer require datalogix/laravel-builder-macros
 
 The package will automatically register itself.
 
+If a macro with the same name is already registered, for example by another package, it is kept. To replace one of these macros in your application, register your own with `Builder::macro()` in the `boot` method of a service provider.
+
 ## Macros
 
 - [`addSubSelect`](#addSubSelect)
