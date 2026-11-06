@@ -2,7 +2,7 @@
 
 [![Latest Stable Version](https://poser.pugx.org/datalogix/laravel-builder-macros/version)](https://packagist.org/packages/datalogix/laravel-builder-macros)
 [![Total Downloads](https://poser.pugx.org/datalogix/laravel-builder-macros/downloads)](https://packagist.org/packages/datalogix/laravel-builder-macros)
-[![datalogix](https://github.com/datalogix/laravel-builder-macros/actions/workflows/datalogix.yml/badge.svg)](https://github.com/datalogix/laravel-builder-macros/actions/workflows/datalogix.yml)
+[![ci](https://img.shields.io/github/actions/workflow/status/datalogix/laravel-builder-macros/datalogix.yml?branch=main&label=ci)](https://github.com/datalogix/laravel-builder-macros/actions/workflows/datalogix.yml)
 [![codecov](https://codecov.io/gh/datalogix/laravel-builder-macros/branch/main/graph/badge.svg)](https://codecov.io/gh/datalogix/laravel-builder-macros)
 [![License](https://poser.pugx.org/datalogix/laravel-builder-macros/license)](https://packagist.org/packages/datalogix/laravel-builder-macros)
 
