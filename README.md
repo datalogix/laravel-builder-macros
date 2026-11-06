@@ -206,7 +206,7 @@ $query->whereLike(['title', 'contact.name'], 'john')->get();
 Notes:
 
 - Columns containing a `.` are searched in relations (`contact.name` searches `name` in the `contact` relation, and `posts.comments.body` searches nested relations). Table-prefixed columns like `users.name` are not supported. Relation searches don't support aliased tables (`from('users as u')`), as Laravel's `whereHas` doesn't.
-- Each name of a relation path must be a relation of the model: names of Eloquent methods (like `truncate` or `save`), static methods and methods with required arguments throw a `RelationNotFoundException` before any method is called.
+- Each name of a relation path must be a relation of the model. Names of Eloquent methods (like `truncate` or `save`), static, non-public and methods with required arguments throw a `RelationNotFoundException` before any method is called; other public methods of your model are called once and throw it if they don't return a relation.
 - Columns ending in `_id` are compared with `=` instead of `LIKE`.
 - Blank and boolean values are ignored.
 - `%` and `_` in the value act as wildcards, unless escaped with the `$escape` argument:

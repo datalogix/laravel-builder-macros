@@ -4,7 +4,7 @@ This package (`datalogix/laravel-builder-macros`) adds macros to the Eloquent `B
 
 ### Searching with `search` / `whereLike`
 
-- Prefer `search()`. On Eloquent builders `whereLike()` is this macro, not Laravel's native `whereLike($column, $value, $caseSensitive)`: it wraps the value with `%` and its third argument is `$start`. On `DB::table()` the native method is used.
+- Prefer `search()`, called as `Model::query()->search()`: models using Laravel Scout have a static `search()` method. On Eloquent builders `whereLike()` is this macro, not Laravel's native `whereLike($column, $value, $caseSensitive)`: it wraps the value with `%` and its third argument is `$start`. On `DB::table()` the native method is used.
 - Arguments: `$columns`, `$value`, `$start = true`, `$end = true`, `$escape = false`, `$ignoreCase = false`. Pass `escape: true` to match `%`, `_` and `!` literally, and `ignoreCase: true` to ignore case on PostgreSQL (`ILIKE`).
 - Columns with a `.` search a relation (`posts.title`, `posts.comments.body`); table-prefixed columns like `users.name` are not supported. Columns ending in `_id` use `=`. Blank and boolean values add no condition.
 
@@ -16,7 +16,7 @@ Post::query()->search(['title', 'user.name'], $term, escape: true)->get();
 
 ### Filtering request input with `filter`
 
-Always pass the allowed columns when the filters come from the request. Every key becomes a column or, with a `.`, a relation, and Eloquent resolves a relation by calling the model method of the same name.
+Always pass the allowed columns when the filters come from the request. Every key becomes a column or, with a `.`, a relation, and Eloquent resolves a relation by calling the model method of the same name. Names that are not relations (Eloquent's own methods like `truncate`, static, non-public or with required arguments) throw a `RelationNotFoundException` before being called, but a public method of your model is called once to check that it returns a relation.
 
 @verbatim
 <code-snippet name="Filter request input" lang="php">
