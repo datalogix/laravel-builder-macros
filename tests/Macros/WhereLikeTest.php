@@ -2,9 +2,11 @@
 
 namespace Datalogix\BuilderMacros\Tests\Macros;
 
+use Datalogix\BuilderMacros\Tests\Database\Models\Image;
 use Datalogix\BuilderMacros\Tests\Database\Models\Post;
 use Datalogix\BuilderMacros\Tests\Database\Models\User;
 use Datalogix\BuilderMacros\Tests\TestCase;
+use Illuminate\Database\Eloquent\RelationNotFoundException;
 use Illuminate\Support\Facades\DB;
 
 class WhereLikeTest extends TestCase
@@ -197,5 +199,44 @@ class WhereLikeTest extends TestCase
 
         $this->assertEquals(['Foo'], User::whereLike('name', 'foo', ignoreCase: true)->pluck('name')->all());
         $this->assertEquals(['Foo'], User::whereLike('name', 'foo', escape: true, ignoreCase: true)->pluck('name')->all());
+    }
+
+    public function test_query_with_model_method_as_relation_does_not_call_it()
+    {
+        User::create(['name' => 'Foo', 'email' => 'foo@bar.com']);
+
+        foreach (['truncate', 'save', 'delete', 'touch', 'hasOne', 'query', 'getTable'] as $method) {
+            try {
+                User::whereLike($method.'.name', 'foo')->get();
+                $this->fail("Relation [{$method}] should not be accepted.");
+            } catch (RelationNotFoundException $e) {
+                $this->assertEquals($method, $e->relation);
+            }
+        }
+
+        $this->assertEquals(1, User::count());
+    }
+
+    public function test_query_with_model_method_as_sub_relation_does_not_call_it()
+    {
+        $this->expectException(RelationNotFoundException::class);
+
+        try {
+            Post::whereLike('images.restore.url', 'foo')->get();
+        } finally {
+            $this->assertEquals(0, Image::withTrashed()->count());
+        }
+    }
+
+    public function test_query_with_dynamic_relation()
+    {
+        User::resolveRelationUsing('articles', function (User $user) {
+            return $user->hasMany(Post::class);
+        });
+
+        $expected = 'select * from "users" where (exists (select * from "posts" where "users"."id" = "posts"."user_id" and "title" LIKE ?))';
+        $actual = User::whereLike('articles.title', 'foo')->toSql();
+
+        $this->assertEquals($expected, $actual);
     }
 }

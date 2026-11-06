@@ -2,6 +2,7 @@
 
 namespace Datalogix\BuilderMacros\Macros;
 
+use Datalogix\BuilderMacros\Support\RelationGuard;
 use Datalogix\BuilderMacros\Support\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
@@ -71,6 +72,8 @@ class WhereLike
                             $parts = explode('.', $column);
                             $relationColumn = array_pop($parts);
                             $relationName = implode('.', $parts);
+
+                            RelationGuard::check($query->getModel(), $relationName);
 
                             return $query->orWhereHas(
                                 $relationName,
