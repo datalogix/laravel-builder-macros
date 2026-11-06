@@ -228,5 +228,5 @@ Escaping uses `LIKE ? ESCAPE '!'`, so it works the same way in MySQL, PostgreSQL
 ```php
 $query->whereLike('title', 'john', ignoreCase: true)->get();
 
-// Returns all results where title includes `john`, `John` or `JOHN`, on every database
+// Returns all results where title includes `john`, `John` or `JOHN`, on PostgreSQL and on databases with case-insensitive collations
 ```
