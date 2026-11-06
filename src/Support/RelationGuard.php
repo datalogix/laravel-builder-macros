@@ -4,12 +4,21 @@ namespace Datalogix\BuilderMacros\Support;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\RelationNotFoundException;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionMethod;
 
 class RelationGuard
 {
+    /**
+     * The directory of the Laravel framework sources, like ".../src/Illuminate/".
+     *
+     * @var string|null
+     */
+    protected static $framework;
+
     /**
      * Ensure every name of a relation path, like "posts.comments", is a relation of the model.
      *
@@ -20,10 +29,13 @@ class RelationGuard
      * @return void
      *
      * @throws RelationNotFoundException
+     * @throws InvalidArgumentException
      */
     public static function check(Model $model, $path)
     {
-        foreach (explode('.', $path) as $name) {
+        $names = explode('.', $path);
+
+        foreach ($names as $index => $name) {
             if (! static::isRelationMethod($model, $name)) {
                 throw RelationNotFoundException::make($model, $name);
             }
@@ -34,6 +46,15 @@ class RelationGuard
 
             if (! $relation instanceof Relation) {
                 throw RelationNotFoundException::make($model, $name);
+            }
+
+            // The related model of a MorphTo is only known per row, so the next names can't be checked
+            if ($relation instanceof MorphTo && $index < count($names) - 1) {
+                throw new InvalidArgumentException(sprintf(
+                    'Relation [%s] is a MorphTo relation, which can\'t be followed by other relations in [%s].',
+                    $name,
+                    $path
+                ));
             }
 
             $model = $relation->getRelated();
@@ -52,7 +73,8 @@ class RelationGuard
             return true;
         }
 
-        if (! method_exists($model, $name)) {
+        // Methods of Eloquent's Model are never relations, even when the model overrides them, like save()
+        if (! method_exists($model, $name) || method_exists(Model::class, $name)) {
             return false;
         }
 
@@ -62,9 +84,9 @@ class RelationGuard
             return false;
         }
 
-        // Methods of Eloquent itself, including its traits like SoftDeletes, are never relations
-        $eloquent = dirname((new ReflectionClass(Model::class))->getFileName()).DIRECTORY_SEPARATOR;
+        // Methods of Laravel's own traits, like MustVerifyEmail::markEmailAsVerified(), are not relations either
+        static::$framework ??= dirname((new ReflectionClass(Model::class))->getFileName(), 3).DIRECTORY_SEPARATOR;
 
-        return ! str_starts_with((string) $method->getFileName(), $eloquent);
+        return ! str_starts_with((string) $method->getFileName(), static::$framework);
     }
 }

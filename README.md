@@ -99,7 +99,7 @@ $query->filter($request->all(), ['name', 'email'], true)->get();
 ```
 
 > [!WARNING]
-> Never pass unfiltered input such as `$request->all()` without allowed columns: every key becomes a column (or a relation, when it contains a `.`), so users could filter on any column, like `password`, or break the query with keys like `page`. Laravel resolves a relation by calling the model method of the same name, so a key like `archive.x` would run a public `archive()` method of your model. Eloquent's own methods, like `truncate` or `save`, are rejected, but your model's methods are not.
+> Never pass unfiltered input such as `$request->all()` without allowed columns: every key becomes a column (or a relation, when it contains a `.`), so users could filter on any column, like `password`, or break the query with keys like `page`. Laravel resolves a relation by calling the model method of the same name, so a key like `archive.x` would run a public `archive()` method of your model. Laravel's own methods, like `truncate`, `save` or `markEmailAsVerified`, are rejected even when your model overrides them, but methods of your model and of other packages' traits, like Scout's `searchable`, are not.
 
 ### `joinRelation`
 
@@ -206,7 +206,7 @@ $query->whereLike(['title', 'contact.name'], 'john')->get();
 Notes:
 
 - Columns containing a `.` are searched in relations (`contact.name` searches `name` in the `contact` relation, and `posts.comments.body` searches nested relations). Table-prefixed columns like `users.name` are not supported. Relation searches don't support aliased tables (`from('users as u')`), as Laravel's `whereHas` doesn't.
-- Each name of a relation path must be a relation of the model. Names of Eloquent methods (like `truncate` or `save`), static, non-public and methods with required arguments throw a `RelationNotFoundException` before any method is called; other public methods of your model are called once and throw it if they don't return a relation.
+- Each name of a relation path must be a relation of the model. Names of Laravel's own methods (like `truncate`, `save` or `markEmailAsVerified`, even when overridden by the model), static, non-public and methods with required arguments throw a `RelationNotFoundException` before any method is called; other public methods are called to check that they return a relation and throw it if they don't. A `MorphTo` relation can only be the last name of the path, as its related model is only known per row; followed by other names, it throws an `InvalidArgumentException`.
 - Columns ending in `_id` are compared with `=` instead of `LIKE`.
 - Blank and boolean values are ignored.
 - `%` and `_` in the value act as wildcards, unless escaped with the `$escape` argument:

@@ -8,6 +8,7 @@ use Datalogix\BuilderMacros\Tests\Database\Models\User;
 use Datalogix\BuilderMacros\Tests\TestCase;
 use Illuminate\Database\Eloquent\RelationNotFoundException;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class WhereLikeTest extends TestCase
 {
@@ -228,11 +229,59 @@ class WhereLikeTest extends TestCase
         }
     }
 
+    public function test_query_with_relation_requiring_arguments()
+    {
+        $this->expectException(RelationNotFoundException::class);
+
+        User::whereLike('postsWithTitle.title', 'foo')->toSql();
+    }
+
     public function test_query_with_model_method_not_returning_relation()
     {
         $this->expectException(RelationNotFoundException::class);
 
         User::whereLike('initials.x', 'foo')->toSql();
+    }
+
+    public function test_query_with_laravel_trait_method_as_relation_does_not_call_it()
+    {
+        foreach (['markEmailAsVerified', 'sendEmailVerificationNotification'] as $method) {
+            try {
+                User::whereLike($method.'.name', 'foo')->get();
+                $this->fail("Relation [{$method}] should not be accepted.");
+            } catch (RelationNotFoundException $e) {
+                $this->assertEquals($method, $e->relation);
+            }
+        }
+
+        $this->assertEquals(0, User::count());
+    }
+
+    public function test_query_with_overridden_model_method_as_relation_does_not_call_it()
+    {
+        foreach (['save', 'SAVE'] as $method) {
+            try {
+                Post::whereLike($method.'.title', 'foo')->get();
+                $this->fail("Relation [{$method}] should not be accepted.");
+            } catch (RelationNotFoundException $e) {
+                $this->assertEquals($method, $e->relation);
+            }
+        }
+
+        $this->assertEquals(0, Post::count());
+    }
+
+    public function test_query_with_relation_after_morph_to()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Relation [imageable] is a MorphTo relation');
+
+        Post::whereLike('images.imageable.user.name', 'foo')->toSql();
+    }
+
+    public function test_query_with_morph_to_as_last_relation()
+    {
+        $this->assertStringContainsString('"images"', Image::whereLike('imageable.name', 'foo')->toSql());
     }
 
     public function test_query_with_dynamic_relation()

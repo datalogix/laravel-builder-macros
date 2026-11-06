@@ -16,7 +16,7 @@ Post::query()->search(['title', 'user.name'], $term, escape: true)->get();
 
 ### Filtering request input with `filter`
 
-Always pass the allowed columns when the filters come from the request. Every key becomes a column or, with a `.`, a relation, and Eloquent resolves a relation by calling the model method of the same name. Names that are not relations (Eloquent's own methods like `truncate`, static, non-public or with required arguments) throw a `RelationNotFoundException` before being called, but a public method of your model is called once to check that it returns a relation.
+Always pass the allowed columns when the filters come from the request. Every key becomes a column or, with a `.`, a relation, and Eloquent resolves a relation by calling the model method of the same name. Names that are not relations (Laravel's own methods like `truncate`, `save` or `markEmailAsVerified`, even when overridden, static, non-public or with required arguments) throw a `RelationNotFoundException` before being called, but other public methods, of the model or of other packages' traits, are called to check that they return a relation. A `MorphTo` relation can only be the last name of a relation path.
 
 @verbatim
 <code-snippet name="Filter request input" lang="php">
