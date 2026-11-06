@@ -32,4 +32,9 @@ class User extends Model
     {
         return $this->hasOneThrough(Comment::class, Post::class);
     }
+
+    public function initials()
+    {
+        return strtoupper(substr((string) $this->name, 0, 1));
+    }
 }

@@ -228,6 +228,13 @@ class WhereLikeTest extends TestCase
         }
     }
 
+    public function test_query_with_model_method_not_returning_relation()
+    {
+        $this->expectException(RelationNotFoundException::class);
+
+        User::whereLike('initials.x', 'foo')->toSql();
+    }
+
     public function test_query_with_dynamic_relation()
     {
         User::resolveRelationUsing('articles', function (User $user) {
