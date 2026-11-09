@@ -2,6 +2,7 @@
 
 .DS_Store
 Thumbs.db
+*.swp
 
 /.codex/
 /.cursor/
@@ -20,8 +21,8 @@ Thumbs.db
 /composer.lock
 /composer.phar
 /clover.xml
-/coverage/
 /build/
+/coverage/
 
 /.env
 
@@ -30,3 +31,6 @@ Thumbs.db
 
 /package-lock.json
 /pnpm-lock.yaml
+/yarn.lock
+/bun.lock
+/bun.lockb
