@@ -25,6 +25,7 @@ class BuilderMacroServiceProviderTest extends TestCase
         try {
             (new BuilderMacroServiceProvider($this->app))->register();
 
+            // @phpstan-ignore arguments.count (the custom macro takes no arguments)
             $this->assertEquals('custom', User::query()->map());
         } finally {
             // Macros are static, so the package macro is restored for the next tests

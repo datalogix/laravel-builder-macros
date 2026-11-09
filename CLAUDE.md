@@ -14,7 +14,8 @@ composer test                                   # vendor/bin/phpunit (config: ph
 vendor/bin/phpunit --no-coverage                # faster, no coverage driver needed
 vendor/bin/phpunit --filter test_name           # single test
 vendor/bin/phpunit tests/Macros/WhereLikeTest.php
-composer lint                                   # vendor/bin/pint (Laravel preset)
+composer lint                                   # checks only: vendor/bin/pint --test and vendor/bin/phpstan analyse (level 5, phpstan.neon.dist)
+composer format                                 # vendor/bin/pint (Laravel preset)
 ```
 
 CI runs `.github/workflows/datalogix.yml`, which calls the shared workflow `datalogix/workflows/.github/workflows/package.yml@v2`.

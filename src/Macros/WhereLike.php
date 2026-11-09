@@ -35,7 +35,7 @@ class WhereLike
             $from = Table::reference($this->getQuery()->from);
 
             $like = function (Builder $query, $column, $boolean) use ($value, $start, $end, $escape, $ignoreCase) {
-                $driver = $query->getQuery()->getConnection()->getDriverName();
+                $driver = $query->getModel()->getConnection()->getDriverName();
 
                 // PostgreSQL's LIKE is case sensitive; the other databases ignore case with their default collations
                 $operator = $ignoreCase && $driver === 'pgsql' ? 'ILIKE' : 'LIKE';

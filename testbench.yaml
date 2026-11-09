@@ -1,0 +1,2 @@
+providers:
+  - Datalogix\BuilderMacros\BuilderMacroServiceProvider

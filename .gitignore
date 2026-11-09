@@ -25,6 +25,7 @@ Thumbs.db
 
 /.env
 
+/phpstan.neon
 /phpunit.xml
 
 /package-lock.json

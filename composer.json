@@ -23,6 +23,7 @@
         "illuminate/support": "^12.0|^13.0"
     },
     "require-dev": {
+        "larastan/larastan": "^3.14",
         "laravel/pint": "^1.30",
         "orchestra/testbench": "^10.0|^11.0",
         "phpunit/phpunit": "^11.5|^12.0|^13.0"
@@ -38,8 +39,12 @@
         }
     },
     "scripts": {
-        "lint": "vendor/bin/pint",
-        "test": "vendor/bin/phpunit"
+        "format": "@php vendor/bin/pint",
+        "lint": [
+            "@php vendor/bin/pint --test",
+            "@php vendor/bin/phpstan analyse"
+        ],
+        "test": "@php vendor/bin/phpunit"
     },
     "extra": {
         "laravel": {

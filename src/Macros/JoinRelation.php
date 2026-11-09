@@ -78,7 +78,7 @@ class JoinRelation
                     $related = $name;
                 }
 
-                $deletedAt = in_array(SoftDeletes::class, class_uses_recursive($model))
+                $deletedAt = in_array(SoftDeletes::class, class_uses_recursive($model)) && method_exists($model, 'getDeletedAtColumn')
                     ? $model->getDeletedAtColumn()
                     : null;
 
