@@ -4,6 +4,7 @@ namespace Datalogix\BuilderMacros\Macros;
 
 use Datalogix\BuilderMacros\Support\RelationGuard;
 use Datalogix\BuilderMacros\Support\Table;
+use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -35,7 +36,9 @@ class WhereLike
             $from = Table::reference($this->getQuery()->from);
 
             $like = function (Builder $query, $column, $boolean) use ($value, $start, $end, $escape, $ignoreCase) {
-                $driver = $query->getQuery()->getConnection()->getDriverName();
+                /** @var Connection $connection */
+                $connection = $query->getQuery()->getConnection();
+                $driver = $connection->getDriverName();
 
                 // PostgreSQL's LIKE is case sensitive; the other databases ignore case with their default collations
                 $operator = $ignoreCase && $driver === 'pgsql' ? 'ILIKE' : 'LIKE';
