@@ -78,7 +78,8 @@ class JoinRelation
                     $related = $name;
                 }
 
-                $deletedAt = in_array(SoftDeletes::class, class_uses_recursive($model)) && method_exists($model, 'getDeletedAtColumn')
+                $deletedAt = in_array(SoftDeletes::class, class_uses_recursive($model))
+                    /** @phpstan-ignore method.notFound (models using SoftDeletes have this method) */
                     ? $model->getDeletedAtColumn()
                     : null;
 
