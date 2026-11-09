@@ -38,3 +38,4 @@ Key behaviors that tests cover and are easy to break:
 - `tests/TestCase.php` extends `Orchestra\Testbench\TestCase`, registers the provider via `getPackageProviders()` and uses `RefreshDatabase` with migrations from `tests/Database/Migrations` on SQLite in memory (`DB_CONNECTION=testing` in `phpunit.xml.dist`).
 - Fixture models (`User`, `Post`, `Comment`, `Image`) live in `tests/Database/Models`; add relations/columns there and in the migrations when a test needs them.
 - One test class per macro in `tests/Macros/`, methods named `test_*` in snake_case. Tests usually assert on generated SQL (`toSql()`/bindings) and/or on query results.
+- `testbench.yaml` registers the provider again so Larastan (`phpstan.neon.dist`) boots an app that knows the macros; without it, calls like `$this->defaultSelectAll()` are reported as undefined methods.
