@@ -10,12 +10,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 composer install
-composer test                                   # vendor/bin/phpunit (config: phpunit.xml.dist, writes coverage)
-vendor/bin/phpunit --no-coverage                # faster, no coverage driver needed
-vendor/bin/phpunit --filter test_name           # single test
-vendor/bin/phpunit tests/Macros/WhereLikeTest.php
-composer lint                                   # checks only: vendor/bin/pint --test and vendor/bin/phpstan analyse (level 5, phpstan.neon.dist)
-composer format                                 # vendor/bin/pint (Laravel preset)
+composer test                                   # vendor/bin/pest (config: phpunit.xml.dist, writes coverage)
+vendor/bin/pest --no-coverage                   # faster, no coverage driver needed
+vendor/bin/pest --filter test_name              # single test
+vendor/bin/pest tests/Macros/WhereLikeTest.php
+composer lint                                   # checks only: pint --test, phpstan analyse (level 5, phpstan.neon.dist) and rector --dry-run
+composer format                                 # rector, then pint (Laravel preset)
 ```
 
 CI runs `.github/workflows/datalogix.yml`, which calls the shared workflow `datalogix/workflows/.github/workflows/package.yml@v2`.

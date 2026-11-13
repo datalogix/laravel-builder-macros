@@ -40,9 +40,7 @@ class RelationGuard
                 throw RelationNotFoundException::make($model, $name);
             }
 
-            $relation = Relation::noConstraints(function () use ($model, $name) {
-                return $model->newInstance()->$name();
-            });
+            $relation = Relation::noConstraints(fn () => $model->newInstance()->$name());
 
             if (! $relation instanceof Relation) {
                 throw RelationNotFoundException::make($model, $name);
@@ -69,7 +67,7 @@ class RelationGuard
      */
     protected static function isRelationMethod(Model $model, $name)
     {
-        if ($model->relationResolver(get_class($model), $name)) {
+        if ($model->relationResolver($model::class, $name)) {
             return true;
         }
 

@@ -19,9 +19,7 @@ class MapTest extends TestCase
             'email3@email3.com',
         ]);
 
-        $actual = User::query()->map(function ($user) {
-            return $user->email;
-        });
+        $actual = User::query()->map(fn ($user) => $user->email);
 
         $this->assertEquals($expected, $actual);
     }

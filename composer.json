@@ -26,7 +26,9 @@
         "larastan/larastan": "^3.14",
         "laravel/pint": "^1.30",
         "orchestra/testbench": "^10.0|^11.0",
-        "phpunit/phpunit": "^11.5|^12.0|^13.0"
+        "pestphp/pest": "^3.8|^4.7|^5.3",
+        "phpunit/phpunit": "^11.5|^12.0|^13.0",
+        "rector/rector": "^2.8"
     },
     "autoload": {
         "psr-4": {
@@ -39,12 +41,16 @@
         }
     },
     "scripts": {
-        "format": "@php vendor/bin/pint",
+        "test": "@php vendor/bin/pest",
         "lint": [
             "@php vendor/bin/pint --test",
-            "@php vendor/bin/phpstan analyse"
+            "@php vendor/bin/phpstan analyse --memory-limit=1G",
+            "@php vendor/bin/rector --dry-run"
         ],
-        "test": "@php vendor/bin/phpunit"
+        "format": [
+            "@php vendor/bin/rector",
+            "@php vendor/bin/pint"
+        ]
     },
     "extra": {
         "laravel": {

@@ -18,9 +18,7 @@ class BuilderMacroServiceProviderTest extends TestCase
 
     public function test_keeps_macro_already_registered()
     {
-        Builder::macro('map', function () {
-            return 'custom';
-        });
+        Builder::macro('map', fn () => 'custom');
 
         try {
             (new BuilderMacroServiceProvider($this->app))->register();
