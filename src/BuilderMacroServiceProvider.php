@@ -23,9 +23,7 @@ class BuilderMacroServiceProvider extends ServiceProvider
     public function register()
     {
         Collection::make($this->macros())
-            ->reject(function ($class, $macro) {
-                return Builder::hasGlobalMacro($macro);
-            })
+            ->reject(fn ($class, $macro) => Builder::hasGlobalMacro($macro))
             ->each(function ($class, $macro) {
                 Builder::macro($macro, $this->app->make($class)());
             });

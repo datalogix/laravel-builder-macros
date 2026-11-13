@@ -60,16 +60,14 @@ class JoinRelation
                     throw new InvalidArgumentException(sprintf(
                         'Relation [%s] of type [%s] is not supported. Only BelongsTo, HasOne, HasMany, MorphOne and MorphMany relations can be joined.',
                         $name,
-                        get_class($relation)
+                        $relation::class
                     ));
                 }
 
                 $model = $relation->getRelated();
                 $table = $related = $model->getTable();
 
-                $used = array_map(function ($join) {
-                    return Table::reference($join->table);
-                }, $this->getQuery()->joins ?? []);
+                $used = array_map(fn ($join) => Table::reference($join->table), $this->getQuery()->joins ?? []);
 
                 // Self relations, like "parent" or "children", and relations to an already joined table,
                 // like "author" and "editor", join the table under the relation name

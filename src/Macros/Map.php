@@ -15,8 +15,6 @@ class Map
 {
     public function __invoke()
     {
-        return function (callable $callback) {
-            return $this->get()->map($callback);
-        };
+        return fn (callable $callback) => $this->get()->map($callback);
     }
 }

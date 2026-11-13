@@ -286,9 +286,7 @@ class WhereLikeTest extends TestCase
 
     public function test_query_with_dynamic_relation()
     {
-        User::resolveRelationUsing('articles', function (User $user) {
-            return $user->hasMany(Post::class);
-        });
+        User::resolveRelationUsing('articles', fn (User $user) => $user->hasMany(Post::class));
 
         $expected = 'select * from "users" where (exists (select * from "posts" where "users"."id" = "posts"."user_id" and "title" LIKE ?))';
         $actual = User::whereLike('articles.title', 'foo')->toSql();

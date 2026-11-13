@@ -54,9 +54,7 @@ class WhereLike
                     $characters[] = '[';
                 }
 
-                $value = str_replace($characters, array_map(function ($character) {
-                    return '!'.$character;
-                }, $characters), (string) $value);
+                $value = str_replace($characters, array_map(fn ($character) => '!'.$character, $characters), (string) $value);
 
                 return $query->whereRaw(
                     $query->getQuery()->getGrammar()->wrap($column)." {$operator} ? ESCAPE '!'",
