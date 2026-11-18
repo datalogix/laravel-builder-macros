@@ -1,219 +1,159 @@
 <?php
 
-namespace Datalogix\BuilderMacros\Tests\Macros;
-
 use Datalogix\BuilderMacros\Tests\Database\Models\Comment;
 use Datalogix\BuilderMacros\Tests\Database\Models\Image;
 use Datalogix\BuilderMacros\Tests\Database\Models\Post;
 use Datalogix\BuilderMacros\Tests\Database\Models\User;
-use Datalogix\BuilderMacros\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 
-class JoinRelationTest extends TestCase
-{
-    public function test_query()
-    {
-        $expected = 'select "posts".* from "posts" inner join "users" on "posts"."user_id" = "users"."id"';
-        $actual = Post::joinRelation('user')->toSql();
+test('query', function () {
+    expect(Post::joinRelation('user')->toSql())
+        ->toBe('select "posts".* from "posts" inner join "users" on "posts"."user_id" = "users"."id"');
+});
 
-        $this->assertEquals($expected, $actual);
-    }
+test('query with has many', function () {
+    expect(User::joinRelation('posts')->toSql())
+        ->toBe('select "users".* from "users" inner join "posts" on "users"."id" = "posts"."user_id"');
+});
 
-    public function test_query_with_has_many()
-    {
-        $expected = 'select "users".* from "users" inner join "posts" on "users"."id" = "posts"."user_id"';
-        $actual = User::joinRelation('posts')->toSql();
+test('query with unsupported relation', function () {
+    User::joinRelation('latestComment');
+})->throws(InvalidArgumentException::class);
 
-        $this->assertEquals($expected, $actual);
-    }
+test('query with table alias', function () {
+    expect(Post::from('posts as p')->joinRelation('user')->toSql())
+        ->toBe('select "p".* from "posts" as "p" inner join "users" on "p"."user_id" = "users"."id"');
+});
 
-    public function test_query_with_unsupported_relation()
-    {
-        $this->expectException(InvalidArgumentException::class);
+test('query with selected columns', function () {
+    expect(Post::select('posts.title', 'users.name')->joinRelation('user')->toSql())
+        ->toBe('select "posts"."title", "users"."name" from "posts" inner join "users" on "posts"."user_id" = "users"."id"');
+});
 
-        User::joinRelation('latestComment');
-    }
+test('result keeps model attributes', function () {
+    User::create(['name' => 'foo', 'email' => 'foo@bar.com']);
+    $user = User::create(['name' => 'bar', 'email' => 'bar@bar.com']);
+    $post = $user->posts()->create(['title' => 'baz']);
 
-    public function test_query_with_table_alias()
-    {
-        $expected = 'select "p".* from "posts" as "p" inner join "users" on "p"."user_id" = "users"."id"';
-        $actual = Post::from('posts as p')->joinRelation('user')->toSql();
+    expect(Post::joinRelation('user')->first()->id)->toBe($post->id);
+});
 
-        $this->assertEquals($expected, $actual);
-    }
+test('query with expression table', function () {
+    expect(Post::from(DB::raw('posts'))->joinRelation('user')->toSql())
+        ->toBe('select * from posts inner join "users" on "posts"."user_id" = "users"."id"');
+});
 
-    public function test_query_with_selected_columns()
-    {
-        $expected = 'select "posts"."title", "users"."name" from "posts" inner join "users" on "posts"."user_id" = "users"."id"';
-        $actual = Post::select('posts.title', 'users.name')->joinRelation('user')->toSql();
+test('query with self belongs to', function () {
+    expect(User::joinRelation('parent')->toSql())
+        ->toBe('select "users".* from "users" inner join "users" as "parent" on "users"."parent_id" = "parent"."id"');
+});
 
-        $this->assertEquals($expected, $actual);
-    }
+test('query with self has many', function () {
+    expect(User::joinRelation('children')->toSql())
+        ->toBe('select "users".* from "users" inner join "users" as "children" on "users"."id" = "children"."parent_id"');
+});
 
-    public function test_result_keeps_model_attributes()
-    {
-        User::create(['name' => 'foo', 'email' => 'foo@bar.com']);
-        $user = User::create(['name' => 'bar', 'email' => 'bar@bar.com']);
-        $post = $user->posts()->create(['title' => 'baz']);
+test('query with self relation and table alias', function () {
+    expect(User::from('users as u')->joinRelation('parent')->toSql())
+        ->toBe('select "u".* from "users" as "u" inner join "users" on "u"."parent_id" = "users"."id"');
+});
 
-        $this->assertEquals($post->id, Post::joinRelation('user')->first()->id);
-    }
+test('result with self relation', function () {
+    $parent = User::create(['name' => 'parent', 'email' => 'parent@bar.com']);
+    $child = User::create(['name' => 'child', 'email' => 'child@bar.com', 'parent_id' => $parent->id]);
 
-    public function test_query_with_expression_table()
-    {
-        $expected = 'select * from posts inner join "users" on "posts"."user_id" = "users"."id"';
-        $actual = Post::from(DB::raw('posts'))->joinRelation('user')->toSql();
+    $actual = User::joinRelation('parent')->addSelect('parent.name as parent_name')->get();
 
-        $this->assertEquals($expected, $actual);
-    }
+    expect($actual)->toHaveCount(1)
+        ->and($actual->first()->id)->toBe($child->id)
+        ->and($actual->first()->parent_name)->toBe('parent');
+});
 
-    public function test_query_with_self_belongs_to()
-    {
-        $expected = 'select "users".* from "users" inner join "users" as "parent" on "users"."parent_id" = "parent"."id"';
-        $actual = User::joinRelation('parent')->toSql();
+test('query with morph many', function () {
+    $query = Post::joinRelation('images');
 
-        $this->assertEquals($expected, $actual);
-    }
+    expect($query->toSql())->toBe('select "posts".* from "posts" inner join "images" on "posts"."id" = "images"."imageable_id" and "images"."imageable_type" = ? and "images"."deleted_at" is null')
+        ->and($query->getBindings())->toBe([Post::class]);
+});
 
-    public function test_query_with_self_has_many()
-    {
-        $expected = 'select "users".* from "users" inner join "users" as "children" on "users"."id" = "children"."parent_id"';
-        $actual = User::joinRelation('children')->toSql();
+test('query with morph one', function () {
+    $query = User::joinRelation('avatar');
 
-        $this->assertEquals($expected, $actual);
-    }
+    expect($query->toSql())->toBe('select "users".* from "users" inner join "images" on "users"."id" = "images"."imageable_id" and "images"."imageable_type" = ? and "images"."deleted_at" is null')
+        ->and($query->getBindings())->toBe([User::class]);
+});
 
-    public function test_query_with_self_relation_and_table_alias()
-    {
-        $expected = 'select "u".* from "users" as "u" inner join "users" on "u"."parent_id" = "users"."id"';
-        $actual = User::from('users as u')->joinRelation('parent')->toSql();
+test('result with morph relation', function () {
+    $user = User::create(['name' => 'foo', 'email' => 'foo@bar.com']);
+    $post = $user->posts()->create(['title' => 'baz']);
 
-        $this->assertEquals($expected, $actual);
-    }
+    // Same id, different types
+    expect($post->id)->toBe($user->id);
 
-    public function test_result_with_self_relation()
-    {
-        $parent = User::create(['name' => 'parent', 'email' => 'parent@bar.com']);
-        $child = User::create(['name' => 'child', 'email' => 'child@bar.com', 'parent_id' => $parent->id]);
+    $user->avatar()->create(['url' => 'avatar.png']);
+    $post->images()->create(['url' => 'post.png']);
 
-        $actual = User::joinRelation('parent')->addSelect('parent.name as parent_name')->get();
+    $actual = Post::joinRelation('images')->addSelect('images.url')->get();
 
-        $this->assertCount(1, $actual);
-        $this->assertEquals($child->id, $actual->first()->id);
-        $this->assertEquals('parent', $actual->first()->parent_name);
-    }
+    expect($actual)->toHaveCount(1)
+        ->and($actual->first()->url)->toBe('post.png');
+});
 
-    public function test_query_with_morph_many()
-    {
-        $expected = 'select "posts".* from "posts" inner join "images" on "posts"."id" = "images"."imageable_id" and "images"."imageable_type" = ? and "images"."deleted_at" is null';
-        $query = Post::joinRelation('images');
+test('query with morph to', function () {
+    Image::joinRelation('imageable');
+})->throws(InvalidArgumentException::class);
 
-        $this->assertEquals($expected, $query->toSql());
-        $this->assertEquals([Post::class], $query->getBindings());
-    }
+test('query with relations to the same table', function () {
+    expect(Post::joinRelation('user')->joinRelation('editor')->toSql())
+        ->toBe('select "posts".* from "posts" inner join "users" on "posts"."user_id" = "users"."id" inner join "users" as "editor" on "posts"."editor_id" = "editor"."id"');
+});
 
-    public function test_query_with_morph_one()
-    {
-        $expected = 'select "users".* from "users" inner join "images" on "users"."id" = "images"."imageable_id" and "images"."imageable_type" = ? and "images"."deleted_at" is null';
-        $query = User::joinRelation('avatar');
+test('result with relations to the same table', function () {
+    $author = User::create(['name' => 'author', 'email' => 'author@bar.com']);
+    $editor = User::create(['name' => 'editor', 'email' => 'editor@bar.com']);
+    $author->posts()->create(['title' => 'baz', 'editor_id' => $editor->id]);
 
-        $this->assertEquals($expected, $query->toSql());
-        $this->assertEquals([User::class], $query->getBindings());
-    }
+    $actual = Post::joinRelation('user')
+        ->joinRelation('editor')
+        ->addSelect('users.name as author_name', 'editor.name as editor_name')
+        ->first();
 
-    public function test_result_with_morph_relation()
-    {
-        $user = User::create(['name' => 'foo', 'email' => 'foo@bar.com']);
-        $post = $user->posts()->create(['title' => 'baz']);
+    expect($actual->author_name)->toBe('author')
+        ->and($actual->editor_name)->toBe('editor');
+});
 
-        // Same id, different types
-        $this->assertEquals($user->id, $post->id);
+test('result without soft deleted rows', function () {
+    $user = User::create(['name' => 'foo', 'email' => 'foo@bar.com']);
+    $post = $user->posts()->create(['title' => 'baz']);
+    $post->images()->create(['url' => 'kept.png']);
+    $post->images()->create(['url' => 'deleted.png'])->delete();
 
-        $user->avatar()->create(['url' => 'avatar.png']);
-        $post->images()->create(['url' => 'post.png']);
+    $actual = Post::joinRelation('images')->addSelect('images.url')->get();
 
-        $actual = Post::joinRelation('images')->addSelect('images.url')->get();
+    expect($actual->pluck('url')->all())->toBe(['kept.png']);
+});
 
-        $this->assertCount(1, $actual);
-        $this->assertEquals('post.png', $actual->first()->url);
-    }
+test('query with nested relation', function () {
+    expect(User::joinRelation('posts.comments')->toSql())
+        ->toBe('select "users".* from "users" inner join "posts" on "users"."id" = "posts"."user_id" inner join "comments" on "posts"."id" = "comments"."post_id"');
+});
 
-    public function test_query_with_morph_to()
-    {
-        $this->expectException(InvalidArgumentException::class);
+test('query with nested relation to the same table', function () {
+    expect(Post::joinRelation('user.parent')->toSql())
+        ->toBe('select "posts".* from "posts" inner join "users" on "posts"."user_id" = "users"."id" inner join "users" as "parent" on "users"."parent_id" = "parent"."id"');
+});
 
-        Image::joinRelation('imageable');
-    }
+test('query with nested unsupported relation', function () {
+    Post::joinRelation('user.latestComment');
+})->throws(InvalidArgumentException::class, 'Relation [latestComment]');
 
-    public function test_query_with_relations_to_the_same_table()
-    {
-        $expected = 'select "posts".* from "posts" inner join "users" on "posts"."user_id" = "users"."id" inner join "users" as "editor" on "posts"."editor_id" = "editor"."id"';
-        $actual = Post::joinRelation('user')->joinRelation('editor')->toSql();
+test('result with nested relation', function () {
+    $parent = User::create(['name' => 'parent', 'email' => 'parent@bar.com']);
+    $user = User::create(['name' => 'foo', 'email' => 'foo@bar.com', 'parent_id' => $parent->id]);
+    $post = $user->posts()->create(['title' => 'baz']);
+    $post->comments()->create(['body' => 'qux']);
 
-        $this->assertEquals($expected, $actual);
-    }
+    $actual = Comment::joinRelation('post.user.parent')->addSelect('parent.name as parent_name')->first();
 
-    public function test_result_with_relations_to_the_same_table()
-    {
-        $author = User::create(['name' => 'author', 'email' => 'author@bar.com']);
-        $editor = User::create(['name' => 'editor', 'email' => 'editor@bar.com']);
-        $author->posts()->create(['title' => 'baz', 'editor_id' => $editor->id]);
-
-        $actual = Post::joinRelation('user')
-            ->joinRelation('editor')
-            ->addSelect('users.name as author_name', 'editor.name as editor_name')
-            ->first();
-
-        $this->assertEquals('author', $actual->author_name);
-        $this->assertEquals('editor', $actual->editor_name);
-    }
-
-    public function test_result_without_soft_deleted_rows()
-    {
-        $user = User::create(['name' => 'foo', 'email' => 'foo@bar.com']);
-        $post = $user->posts()->create(['title' => 'baz']);
-        $post->images()->create(['url' => 'kept.png']);
-        $post->images()->create(['url' => 'deleted.png'])->delete();
-
-        $actual = Post::joinRelation('images')->addSelect('images.url')->get();
-
-        $this->assertEquals(['kept.png'], $actual->pluck('url')->all());
-    }
-
-    public function test_query_with_nested_relation()
-    {
-        $expected = 'select "users".* from "users" inner join "posts" on "users"."id" = "posts"."user_id" inner join "comments" on "posts"."id" = "comments"."post_id"';
-        $actual = User::joinRelation('posts.comments')->toSql();
-
-        $this->assertEquals($expected, $actual);
-    }
-
-    public function test_query_with_nested_relation_to_the_same_table()
-    {
-        $expected = 'select "posts".* from "posts" inner join "users" on "posts"."user_id" = "users"."id" inner join "users" as "parent" on "users"."parent_id" = "parent"."id"';
-        $actual = Post::joinRelation('user.parent')->toSql();
-
-        $this->assertEquals($expected, $actual);
-    }
-
-    public function test_query_with_nested_unsupported_relation()
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Relation [latestComment]');
-
-        Post::joinRelation('user.latestComment');
-    }
-
-    public function test_result_with_nested_relation()
-    {
-        $parent = User::create(['name' => 'parent', 'email' => 'parent@bar.com']);
-        $user = User::create(['name' => 'foo', 'email' => 'foo@bar.com', 'parent_id' => $parent->id]);
-        $post = $user->posts()->create(['title' => 'baz']);
-        $post->comments()->create(['body' => 'qux']);
-
-        $actual = Comment::joinRelation('post.user.parent')->addSelect('parent.name as parent_name')->first();
-
-        $this->assertEquals('parent', $actual->parent_name);
-    }
-}
+    expect($actual->parent_name)->toBe('parent');
+});

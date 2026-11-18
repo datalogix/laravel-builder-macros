@@ -1,78 +1,50 @@
 <?php
 
-namespace Datalogix\BuilderMacros\Tests\Macros;
-
 use Datalogix\BuilderMacros\Tests\Database\Models\User;
-use Datalogix\BuilderMacros\Tests\TestCase;
 use Illuminate\Database\Eloquent\RelationNotFoundException;
 
-class FilterTest extends TestCase
-{
-    public function test_query_with_one_column()
-    {
-        $expected = 'select * from "users" where ("users"."name" LIKE ?)';
-        $actual = User::filter(['name' => 'foo'])->toSql();
+test('query with one column', function () {
+    expect(User::filter(['name' => 'foo'])->toSql())
+        ->toBe('select * from "users" where ("users"."name" LIKE ?)');
+});
 
-        $this->assertEquals($expected, $actual);
-    }
+test('query with more columns', function () {
+    expect(User::filter(['name' => 'foo', 'email' => 'foo'])->toSql())
+        ->toBe('select * from "users" where ("users"."name" LIKE ?) and ("users"."email" LIKE ?)');
+});
 
-    public function test_query_with_more_columns()
-    {
-        $expected = 'select * from "users" where ("users"."name" LIKE ?) and ("users"."email" LIKE ?)';
-        $actual = User::filter(['name' => 'foo', 'email' => 'foo'])->toSql();
+test('query with column nullable', function () {
+    expect(User::filter(['name' => 'foo', 'email' => null])->toSql())
+        ->toBe('select * from "users" where ("users"."name" LIKE ?)');
+});
 
-        $this->assertEquals($expected, $actual);
-    }
+test('query with allowed columns', function () {
+    expect(User::filter(['name' => 'foo', 'page' => '2', 'password' => 'x'], ['name', 'email'])->toSql())
+        ->toBe('select * from "users" where ("users"."name" LIKE ?)');
+});
 
-    public function test_query_with_column_nullable()
-    {
-        $expected = 'select * from "users" where ("users"."name" LIKE ?)';
-        $actual = User::filter(['name' => 'foo', 'email' => null])->toSql();
+test('query ignores array values', function () {
+    expect(User::filter(['name' => 'foo', 'email' => ['foo']])->toSql())
+        ->toBe('select * from "users" where ("users"."name" LIKE ?)');
+});
 
-        $this->assertEquals($expected, $actual);
-    }
+test('query ignores numeric keys', function () {
+    expect(User::filter('foo')->toSql())->toBe('select * from "users"')
+        ->and(User::filter(['foo'])->toSql())->toBe('select * from "users"');
+});
 
-    public function test_query_with_allowed_columns()
-    {
-        $expected = 'select * from "users" where ("users"."name" LIKE ?)';
-        $actual = User::filter(['name' => 'foo', 'page' => '2', 'password' => 'x'], ['name', 'email'])->toSql();
+test('query with escape', function () {
+    $query = User::filter(['name' => '10%'], null, true);
 
-        $this->assertEquals($expected, $actual);
-    }
+    expect($query->toSql())->toBe('select * from "users" where ("users"."name" LIKE ? ESCAPE \'!\')')
+        ->and($query->getBindings())->toBe(['%10!%%']);
+});
 
-    public function test_query_ignores_array_values()
-    {
-        $expected = 'select * from "users" where ("users"."name" LIKE ?)';
-        $actual = User::filter(['name' => 'foo', 'email' => ['foo']])->toSql();
+test('query with model method key does not call it', function () {
+    User::create(['name' => 'Foo', 'email' => 'foo@bar.com']);
 
-        $this->assertEquals($expected, $actual);
-    }
+    expect(fn () => User::filter(['truncate.name' => 'foo'])->get())
+        ->toThrow(fn (RelationNotFoundException $e) => expect($e->relation)->toBe('truncate'));
 
-    public function test_query_ignores_numeric_keys()
-    {
-        $this->assertEquals('select * from "users"', User::filter('foo')->toSql());
-        $this->assertEquals('select * from "users"', User::filter(['foo'])->toSql());
-    }
-
-    public function test_query_with_escape()
-    {
-        $query = User::filter(['name' => '10%'], null, true);
-
-        $this->assertEquals('select * from "users" where ("users"."name" LIKE ? ESCAPE \'!\')', $query->toSql());
-        $this->assertEquals(['%10!%%'], $query->getBindings());
-    }
-
-    public function test_query_with_model_method_key_does_not_call_it()
-    {
-        User::create(['name' => 'Foo', 'email' => 'foo@bar.com']);
-
-        try {
-            User::filter(['truncate.name' => 'foo'])->get();
-            $this->fail('Relation [truncate] should not be accepted.');
-        } catch (RelationNotFoundException $e) {
-            $this->assertEquals('truncate', $e->relation);
-        }
-
-        $this->assertEquals(1, User::count());
-    }
-}
+    expect(User::count())->toBe(1);
+});

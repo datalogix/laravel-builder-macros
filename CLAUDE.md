@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 composer install
 composer test                                   # vendor/bin/pest (config: phpunit.xml.dist, writes coverage)
 vendor/bin/pest --no-coverage                   # faster, no coverage driver needed
-vendor/bin/pest --filter test_name              # single test
+vendor/bin/pest --filter "query with escape"    # single test (by description)
 vendor/bin/pest tests/Macros/WhereLikeTest.php
 composer lint                                   # checks only: pint --test, phpstan analyse (level 5, phpstan.neon.dist) and rector --dry-run
 composer format                                 # rector, then pint (Laravel preset)
@@ -35,7 +35,8 @@ Key behaviors that tests cover and are easy to break:
 
 ## Tests
 
+- Tests use Pest's functional syntax; `tests/Pest.php` applies `TestCase` to every test with `uses(TestCase::class)->in(__DIR__)`.
 - `tests/TestCase.php` extends `Orchestra\Testbench\TestCase`, registers the provider via `getPackageProviders()` and uses `RefreshDatabase` with migrations from `tests/Database/Migrations` on SQLite in memory (`DB_CONNECTION=testing` in `phpunit.xml.dist`).
 - Fixture models (`User`, `Post`, `Comment`, `Image`) live in `tests/Database/Models`; add relations/columns there and in the migrations when a test needs them.
-- One test class per macro in `tests/Macros/`, methods named `test_*` in snake_case. Tests usually assert on generated SQL (`toSql()`/bindings) and/or on query results.
+- One test file per macro in `tests/Macros/`, with `test('lowercase description', fn)` and `expect()` assertions (`toBe` for SQL and bindings, `toEqual` for collections). Expected exceptions use `->throws()` or `expect(fn)->toThrow(fn (Exception $e) => ...)`; avoid `$this` in test closures, as PHPStan types it as `TestCall` (use `app()` instead of `$this->app`). Tests usually assert on generated SQL (`toSql()`/bindings) and/or on query results.
 - `testbench.yaml` registers the provider again so Larastan (`phpstan.neon.dist`) boots an app that knows the macros; without it, calls like `$this->defaultSelectAll()` are reported as undefined methods.
